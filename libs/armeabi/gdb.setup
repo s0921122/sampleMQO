@@ -1,0 +1,2 @@
+set solib-search-path C:/eclipse_x64/NYARToolkit/SampleMqo/obj/local/armeabi
+directory C:/android-ndk-r8/platforms/android-14/arch-arm/usr/include C:/android-ndk-r8/sources/cxx-stl/system C:/eclipse_x64/NYARToolkit/SampleMqo/jni

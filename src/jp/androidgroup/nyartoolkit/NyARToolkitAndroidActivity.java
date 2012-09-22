@@ -1,5 +1,6 @@
 package jp.androidgroup.nyartoolkit;
 
+import java.io.FileOutputStream;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -17,14 +18,17 @@ import jp.nyatla.kGLModel.KGLModelData;
 import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.hardware.Camera;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+
 
 /**
  * Hiroマーカの上にカラーキューブを表示します。
@@ -53,6 +57,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
     private static final int SET_CAMERA_PARAMETERS_WHEN_IDLE = 5;
     public static final int SHOW_LOADING = 6;
     public static final int HIDE_LOADING = 7;
+    
+    static {
+    	System.loadLibrary("yuv420sp2rgb");
+    }
+    public static native void decodeYUV420SP(int[] rgb, byte[] yuv420sp, int width, int height, int type);
+	public static native void decodeYUV420SP(byte[] rgb, byte[] yuv420sp, int width, int heught, int type);
 	
 	/**
 	 * onStartでは、Viewのセットアップをしてください。
@@ -64,7 +74,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		//カメラの取得
 		this._camera_preview=new CameraPreview(this);
-		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
+		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
 		//画面サイズの計算
 		int h = this.getWindowManager().getDefaultDisplay().getHeight();
 		int screen_w,screen_h;
@@ -140,7 +151,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	        	return;
 	        }
 	        fps.draw(0, 0);
-	        Log.d("draw","sychro");
+//	        Log.d("draw","sychro");
 			synchronized(this._ss){
 				this._ms.update(this._ss);
 				if(this._ms.isExistMarker(this._mid[0])){
@@ -148,7 +159,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					gl.glMatrixMode(GL10.GL_MODELVIEW);
 					gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(this._mid[0]),0);
 					//this.box.draw(0,0,20);
-					Log.d("Draw",xpos + "/" +  ypos);
+//					Log.d("Draw",xpos + "/" +  ypos);
 					gl.glTranslatef(this.xpos, this.ypos, this.zpos);
 // 					// OpenGL座標系→ARToolkit座標系
  					gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
@@ -164,7 +175,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 						gl.glMatrixMode(GL10.GL_MODELVIEW);
 						gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(this._mid[1]),0);
 						//this.box.draw(0,0,20);
-						Log.d("Draw",xpos +"" +  ypos);
+//						Log.d("Draw",xpos +"" +  ypos);
 						gl.glTranslatef(this.xpos, this.ypos, this.zpos);
 	 					// OpenGL座標系→ARToolkit座標系
 	 					gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
@@ -189,6 +200,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
         menu.add(Menu.NONE, 0, Menu.NONE, "Position");
         menu.add(Menu.NONE, 1, Menu.NONE, "Rotate");
         menu.add(Menu.NONE, 2, Menu.NONE, "Scale");
+        menu.add(Menu.NONE, 3, Menu.NONE, "ScreenCapture");
  
         return true;
     }
@@ -208,6 +220,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
         case 2:
             mode = 2;
             return true;
+        case 3:
+        	Shot();
+        	return true;
         }
         return false;
     }
@@ -271,6 +286,55 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	public void setYpos(float f) {
 		this.ypos += f;
+	}
+	
+	/**
+	 * スクリーンキャプチャ<br>
+	 * takePictureでうまくいかなかったので、プレビューを加工して保存する．<br>
+	 * CGModemは写らない<br>
+	 * 参考 : http://android.roof-balcony.com/camera/preview-get/
+	 * 
+	 * @author s0921122
+	 * @date 12/09/22
+	 * @version 1.0
+	 */
+	private void Shot(){
+		Log.d("Shot","Screen Capture Start");
+		int width = _cap_size.width;
+		int height = _cap_size.height;
+		Bitmap bmp = null;
+		
+		try{
+		// ARGB8888の画素の配列
+		int[] rgb = new int[(width * height)]; 
+		// ARGB8888で空のビットマップ作成
+		bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888); 
+
+		// YUV420からRGBに変換
+		decodeYUV420SP(rgb, _camera_preview.getCurrentBuffer(), width, height, 2);
+		// 変換した画素からビットマップにセット
+		bmp.setPixels(rgb, 0, width, 0, 0, width, height); 
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		FileOutputStream fos;
+		try{
+			Log.d("Shot","FileOutput Start");
+			String path = new StringBuilder()
+	        .append(Environment.getExternalStorageDirectory().getPath()).append("/")
+	        .append("SampleMQO").append(".jpg")
+	        .toString();
+			
+			fos = new FileOutputStream(path);
+			// JPEGで保存
+			bmp.compress(CompressFormat.JPEG, 100, fos);
+			Log.d("Shot","FileOutput end. \nOutput Path : " + path);
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		Log.d("Shot","ScreenCapture end.");
 	}
 
 	Exception ex=null;
