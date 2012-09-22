@@ -46,7 +46,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	float lastY = 0;
 	float scale = 2f;
 	float xpos=0,ypos=0,zpos=0,xrot=0,yrot=0,zrot=0;
-	GL10 gl;
 	int mode = 0;
 	
 	// for model renderer
@@ -141,59 +140,52 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	public void drawGL(GL10 gl)
 	{
 		try{
-			this.gl = gl;
 			//背景塗り潰し色の指定
 			gl.glClearColor(0,0,0,0);
-	        //背景塗り潰し
-	        gl.glClear(GL10.GL_COLOR_BUFFER_BIT|GL10.GL_DEPTH_BUFFER_BIT);
-	        if(ex!=null){
-	        	_debug.draw(ex);
-	        	return;
-	        }
-	        fps.draw(0, 0);
-//	        Log.d("draw","sychro");
+			//背景塗り潰し
+			gl.glClear(GL10.GL_COLOR_BUFFER_BIT|GL10.GL_DEPTH_BUFFER_BIT);
+			if(ex!=null){
+				_debug.draw(ex);
+				return;
+			}
+			fps.draw(0, 0);
 			synchronized(this._ss){
 				this._ms.update(this._ss);
-				if(this._ms.isExistMarker(this._mid[0])){
-			        this.text.draw("found"+this._ms.getConfidence(this._mid[0]),0,16);
-					gl.glMatrixMode(GL10.GL_MODELVIEW);
-					gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(this._mid[0]),0);
-					//this.box.draw(0,0,20);
-//					Log.d("Draw",xpos + "/" +  ypos);
-					gl.glTranslatef(this.xpos, this.ypos, this.zpos);
-// 					// OpenGL座標系→ARToolkit座標系
- 					gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
- 					gl.glRotatef(this.yrot, 0.0f,1.0f,0.0f);
- 					gl.glRotatef(this.zrot, 0.0f,0.0f,1.0f);
-					gl.glScalef(this.scale, this.scale, this.scale);
-					model_data[0].enables(gl, 10.0f);
-					model_data[0].draw(gl);
-					model_data[0].disables(gl);
-				}else{
-					if(this._ms.isExistMarker(this._mid[1])){
-				        this.text.draw("found"+this._ms.getConfidence(this._mid[1]),0,16);
-						gl.glMatrixMode(GL10.GL_MODELVIEW);
-						gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(this._mid[1]),0);
-						//this.box.draw(0,0,20);
-//						Log.d("Draw",xpos +"" +  ypos);
-						gl.glTranslatef(this.xpos, this.ypos, this.zpos);
-	 					// OpenGL座標系→ARToolkit座標系
-	 					gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
-	 					gl.glRotatef(this.yrot, 0.0f,1.0f,0.0f);
-	 					gl.glRotatef(this.zrot, 0.0f,0.0f,1.0f);
-						gl.glScalef(this.scale, this.scale, this.scale);
-						model_data[1].enables(gl, 10.0f);
-						model_data[1].draw(gl);
-						model_data[1].disables(gl);
+				for(int id : _mid){
+					if(this._ms.isExistMarker(id)){
+						drawModelData(gl, id);
 					}
 				}
-		}
+			}
 		}catch(Exception e)
 		{
 			ex=e;
 		}
 	}
-  
+	
+	/**
+	 * idのに一致するモデルを描写します
+	 * 
+	 * @param gl
+	 * @param id
+	 * @throws NyARException
+	 */
+	private void drawModelData(GL10 gl,int id) throws NyARException{
+		this.text.draw("found" + this._ms.getConfidence(id),0,16);
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
+
+		gl.glTranslatef(this.xpos, this.ypos, this.zpos);
+		// OpenGL座標系→ARToolkit座標系
+		gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
+		gl.glRotatef(this.yrot, 0.0f,1.0f,0.0f);
+		gl.glRotatef(this.zrot, 0.0f,0.0f,1.0f);
+		gl.glScalef(this.scale, this.scale, this.scale);
+		model_data[id].enables(gl, 10.0f);
+		model_data[id].draw(gl);
+		model_data[id].disables(gl);
+	}
+
     public boolean onCreateOptionsMenu(Menu menu){
     	 
         // メニューアイテムの追加
