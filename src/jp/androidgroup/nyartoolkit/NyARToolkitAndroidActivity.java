@@ -2,7 +2,6 @@ package jp.androidgroup.nyartoolkit;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
 
@@ -30,10 +29,12 @@ import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -121,11 +122,23 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	public void onStart()
 	{
 		super.onStart();
+
+		// 端末の画面サイズを取得します
+		// ウィンドウマネージャのインスタンス取得
+		WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+		// ディスプレイのインスタンス生成
+		Display disp = wm.getDefaultDisplay();
+		int displaysize_width = disp.getWidth();
+		int displaysize_height = disp.getHeight();
+		Log.d(TAG,"width : " + displaysize_width + " / height : " + displaysize_height);
+
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		//カメラの取得
 		this._camera_preview=new CameraPreview(this);
+		this._cap_size=this._camera_preview.getRecommendPreviewSize(displaysize_width,displaysize_height);
 //		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
-		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(1280,720);
 		//画面サイズの計算
 		int h = this.getWindowManager().getDefaultDisplay().getHeight();
 		int screen_w,screen_h;
@@ -490,8 +503,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private void overlayBMP(Bitmap under,Bitmap upper){
 		Log.d(TAG,"Bitmap Ovelray Start.");
 		//ARGB_8888,RGB_565,ARGB_4444
-		int width = under.getWidth();
-		int height = under.getHeight();
+		int width = upper.getWidth();
+		int height = upper.getHeight();
 
 		Log.d(TAG,"Create Base Bitmap.");
 		// 合成するための下地
