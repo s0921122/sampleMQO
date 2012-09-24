@@ -2,6 +2,7 @@ package jp.androidgroup.nyartoolkit;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
 
@@ -54,6 +55,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	
 	// マーカーの数
 	private static final int PAT_MAX = 2;
+	// モデルの名前配列
+	private static final String[] models = new String[PAT_MAX];
+	
 	private KGLModelData[] model_data = new KGLModelData[PAT_MAX];
 
 	// Modelの制御
@@ -61,11 +65,37 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	float lastY = 0;
 	float scale = 2f;
 	float xpos=0,ypos=0,zpos=0,xrot=0,yrot=0,zrot=0;
-	int mode = 0;
 	
-	// スクリーンキャプチャ関係
+	// modelの操作フラグ
+	int mode = 0;
+	// モデルの固定表示フラグ
+	boolean displayflag = false;
+	
+	// 画面中央当たりの姿勢制御？
+	float[] center = new float[]{
+			0.99548185f,
+			0.091270804f,
+			0.026182842f,
+			0.0f,
+			-0.04013392f,
+			0.65435773f,
+			-0.7551194f,
+			0.0f,
+			-0.0860533f,
+			0.7506568f,
+			0.6550643f,
+			0.0f,
+			22.488108f,
+			-72.82579f,
+			-359.72952f,
+			1.0f
+	};
+	
+	// スクリーンキャプチャフラグ
 	boolean screenCapture = false;
+	// Bitmapの生成フラグ
 	boolean isGLBitmap = false;
+	// GLの描写部分のBitmap
 	Bitmap GLBitmap;
 
 	// for model renderer
@@ -94,7 +124,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		//カメラの取得
 		this._camera_preview=new CameraPreview(this);
-		//		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
 		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
 		//画面サイズの計算
 		int h = this.getWindowManager().getDefaultDisplay().getHeight();
@@ -127,11 +157,15 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
 
+			// モデルの名前
+			models[0] = "Kiageha.mqo";
+			models[1] = "miku01.mqo";
+			
 			try {
 				//LocalContentProvider content_provider=new LocalContentProvider("Kiageha.mqo");
 				//model_data = KGLModelData.createGLModel(gl,null,content_provider,0.015f, KGLExtensionCheck.IsExtensionSupported(gl,"GL_ARB_vertex_buffer_object"));
-				model_data[0] = KGLModelData.createGLModel(gl,null,assetMng,"Kiageha.mqo", 0.15f);
-				model_data[1] = KGLModelData.createGLModel(gl,null,assetMng,"miku01.mqo", 0.06f);
+				model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, models[0], 0.15f);
+				model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, models[1], 0.06f);
 			} catch (KGLException e) {
 				e.printStackTrace();
 				throw new NyARException(e);
@@ -178,6 +212,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					if(this._ms.isExistMarker(id)) drawModelData(gl, id);
 				}
 			}
+			if(displayflag){
+				drawModelDataFixation(gl, models[1]);
+			}
 			// GL描写部分を画像で保存
 			if(screenCapture){
 				glScreenCapture(gl);
@@ -211,14 +248,58 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
 	}
+	
+
+	/**
+	 * nameの一致するモデルを描写します<br>
+	 * マーカーに左右されず画面上に表示されます．
+	 * 
+	 * @param gl
+	 * @param name
+	 * @throws NyARException
+	 */
+	private void drawModelDataFixation(GL10 gl,String name) throws NyARException{
+		int id = -1;
+		// 名前を検索
+		for(int i=0;i<models.length;i++){
+			if(models[i].startsWith(name)){
+				// 一致する添え字をセット
+				id = i;
+				break;
+			}
+		}
+		if(id<0) return;
+		
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		gl.glLoadMatrixf(center,0);
+		
+		// 姿勢位置をLogに出力
+//		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
+//		String str = "";
+//		float[] mat = this._ms.getGlMarkerMatrix(id);
+//		for(float fl : mat){
+//			str += fl + "\n";
+//		}
+//		Log.d(TAG,"Matrix\n" + str + "end.");
+
+		gl.glTranslatef(this.xpos, this.ypos, this.zpos);
+		// OpenGL座標系→ARToolkit座標系
+		gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
+		gl.glRotatef(this.yrot, 0.0f,1.0f,0.0f);
+		gl.glRotatef(this.zrot, 0.0f,0.0f,1.0f);
+		gl.glScalef(this.scale, this.scale, this.scale);
+		model_data[id].enables(gl, 10.0f);
+		model_data[id].draw(gl);
+		model_data[id].disables(gl);
+	}
 
 	public boolean onCreateOptionsMenu(Menu menu){
-
 		// メニューアイテムの追加
 		menu.add(Menu.NONE, 0, Menu.NONE, "Position");
 		menu.add(Menu.NONE, 1, Menu.NONE, "Rotate");
 		menu.add(Menu.NONE, 2, Menu.NONE, "Scale");
-		menu.add(Menu.NONE, 3, Menu.NONE, "ScreenCapture");
+		menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
+		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
 
 		return true;
 	}
@@ -228,7 +309,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		// addしたときのIDで識別
 		switch (item.getItemId()) {
 		case 0:
-			mode = 0;;
+			mode = 0;
 			return true;
 
 		case 1:
@@ -239,6 +320,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			mode = 2;
 			return true;
 		case 3:
+			if(!displayflag){
+				displayflag = true;
+			}else{
+				displayflag = false;
+			}
+			return true;
+		case 4:
 			Shot();
 			return true;
 		}
@@ -427,9 +515,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			Log.d(TAG,"FileOutput Start.");
 			String path = new StringBuilder()
 			.append(Environment.getExternalStorageDirectory().getPath()).append("/")
+			//.append("Pictures/Screenshots/")
 			.append("SampleMQO").append(".jpg")
 			.toString();
-
+			
 			fos = new FileOutputStream(path);
 			// JPEGで保存
 			newBitmap.compress(CompressFormat.JPEG, 100, fos);
@@ -441,6 +530,5 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			e.printStackTrace();
 		}
 	}
-	
 	Exception ex=null;
 }
