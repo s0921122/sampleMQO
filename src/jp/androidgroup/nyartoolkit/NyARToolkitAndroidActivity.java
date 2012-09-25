@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Environment;
@@ -58,7 +59,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private static final int PAT_MAX = 2;
 	// モデルの名前配列
 	private static final String[] models = new String[PAT_MAX];
-	
+	// モデルデータ
 	private KGLModelData[] model_data = new KGLModelData[PAT_MAX];
 
 	// Modelの制御
@@ -71,6 +72,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	int mode = 0;
 	// モデルの固定表示フラグ
 	boolean displayflag = false;
+	int screen_w,screen_h;
+
 	
 	// 画面中央当たりの姿勢制御？
 	float[] center = new float[]{
@@ -122,28 +125,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	public void onStart()
 	{
 		super.onStart();
-
-		// 端末の画面サイズを取得します
-		// ウィンドウマネージャのインスタンス取得
-		WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-		// ディスプレイのインスタンス生成
-		Display disp = wm.getDefaultDisplay();
-		int displaysize_width = disp.getWidth();
-		int displaysize_height = disp.getHeight();
-		Log.d(TAG,"width : " + displaysize_width + " / height : " + displaysize_height);
-
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		//カメラの取得
 		this._camera_preview=new CameraPreview(this);
-		this._cap_size=this._camera_preview.getRecommendPreviewSize(displaysize_width,displaysize_height);
-//		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(displaysize_width,displaysize_height);
+		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
 //		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
 //		this._cap_size=this._camera_preview.getRecommendPreviewSize(1280,720);
 		//画面サイズの計算
-		int h = this.getWindowManager().getDefaultDisplay().getHeight();
-		int screen_w,screen_h;
-		screen_w=(this._cap_size.width*h/this._cap_size.height);
-		screen_h=h;
+//		int h = this.getWindowManager().getDefaultDisplay().getHeight();
+//		screen_w=(this._cap_size.width*h/this._cap_size.height);
+//		screen_h=h;
+		screen_w = this.getWindowManager().getDefaultDisplay().getWidth();
+		screen_h = this.getWindowManager().getDefaultDisplay().getHeight();
 		//camera
 		fr.addView(this._camera_preview, 0, new LayoutParams(screen_w,screen_h));
 		//GLview
@@ -464,8 +458,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private void glScreenCapture(GL10 gl){
 		Log.d(TAG,"GL Drawing Screen Capture Start.");
 		screenCapture = false;
-		int takeWidth = _cap_size.width;
-		int takeHeight = _cap_size.height;
+		int takeWidth = screen_w;
+		int takeHeight = screen_h		;
 		int[] tmp = new int[takeHeight*takeWidth];
 		int[] screenshot = new int[takeHeight*takeWidth];
 		Buffer screenshotBuffer = IntBuffer.wrap(tmp);
@@ -486,7 +480,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			} 
 		} 
 		// アルファありのBitmapを作成する
-		this.GLBitmap = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
+		Bitmap temp = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
+		//　Bitmapリサイズ
+		this.GLBitmap = Bitmap.createScaledBitmap(temp, _cap_size.width, _cap_size.height, true);
+		temp.recycle();
+		
 		Log.d(TAG,"GL Drawing Screen Capture. Create done.");
 		// GLをキャプチャしたBitmapを作成したのでフラグを立てる
 		isGLBitmap = true;
@@ -503,8 +501,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private void overlayBMP(Bitmap under,Bitmap upper){
 		Log.d(TAG,"Bitmap Ovelray Start.");
 		//ARGB_8888,RGB_565,ARGB_4444
-		int width = upper.getWidth();
-		int height = upper.getHeight();
+		int width = under.getWidth();
+		int height = under.getHeight();
 
 		Log.d(TAG,"Create Base Bitmap.");
 		// 合成するための下地
