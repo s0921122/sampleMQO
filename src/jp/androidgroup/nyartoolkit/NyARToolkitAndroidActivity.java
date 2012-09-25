@@ -49,7 +49,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 {
 
 	// Log認識用タグ
-	private static final String TAG = "NyARToolkitAndroid";
+	private static String TAG = "NyARToolkitAndroid";
 	
 	CameraPreview _camera_preview;
 	AndGLView _glv;
@@ -70,8 +70,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	
 	// modelの操作フラグ
 	int mode = 0;
-	// モデルの固定表示フラグ
-	boolean displayflag = false;
+	// 画面サイズ
 	int screen_w,screen_h;
 
 	
@@ -95,9 +94,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			1.0f
 	};
 	
+	// モデルの固定表示フラグ
+	boolean displayflag = false;
 	// スクリーンキャプチャフラグ
 	boolean screenCapture = false;
-	// Bitmapの生成フラグ
+	// Bitmapの存在フラグ
 	boolean isGLBitmap = false;
 	// GLの描写部分のBitmap
 	Bitmap GLBitmap;
@@ -128,11 +129,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		//カメラの取得
 		this._camera_preview=new CameraPreview(this);
-//		this._cap_size=this._camera_preview.getRecommendPreviewSize(displaysize_width,displaysize_height);
+		// カメラの解像度
 		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
 //		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
 //		this._cap_size=this._camera_preview.getRecommendPreviewSize(1280,720);
-		//画面サイズの計算
+		// 画面サイズの計算（画面に表示される大きさ）
 //		int h = this.getWindowManager().getDefaultDisplay().getHeight();
 //		screen_w=(this._cap_size.width*h/this._cap_size.height);
 //		screen_h=h;
@@ -220,10 +221,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				}
 			}
 			if(displayflag){
+				// フラグがた立っているときモデルを固定表示
 				drawModelDataFixation(gl, models[1]);
 			}
-			// GL描写部分を画像で保存
 			if(screenCapture){
+				// フラグが立ってるときGL描写部分を画像で保存
 				glScreenCapture(gl);
 			}
 		}catch(Exception e)
@@ -266,6 +268,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @throws NyARException
 	 */
 	private void drawModelDataFixation(GL10 gl,String name) throws NyARException{
+		TAG = "drawModelDataFixation";
 		int id = -1;
 		// 名前を検索
 		for(int i=0;i<models.length;i++){
@@ -413,6 +416,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @version 1.0
 	 */
 	private void Shot(){
+		TAG = "Shot";
 		Log.d(TAG,"Screen Capture Start");
 		int width = _cap_size.width;
 		int height = _cap_size.height;
@@ -456,10 +460,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @param gl
 	 */
 	private void glScreenCapture(GL10 gl){
+		TAG = "glScreenCapture";
 		Log.d(TAG,"GL Drawing Screen Capture Start.");
+		// キャプチャフラグを立てる
 		screenCapture = false;
 		int takeWidth = screen_w;
-		int takeHeight = screen_h		;
+		int takeHeight = screen_h;
 		int[] tmp = new int[takeHeight*takeWidth];
 		int[] screenshot = new int[takeHeight*takeWidth];
 		Buffer screenshotBuffer = IntBuffer.wrap(tmp);
@@ -481,7 +487,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		} 
 		// アルファありのBitmapを作成する
 		Bitmap temp = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
-		//　Bitmapリサイズ
+		//　Bitmapをカメラプレビューサイズにリサイズ
 		this.GLBitmap = Bitmap.createScaledBitmap(temp, _cap_size.width, _cap_size.height, true);
 		temp.recycle();
 		
@@ -499,6 +505,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @param upper 上に乗る画像
 	 */
 	private void overlayBMP(Bitmap under,Bitmap upper){
+		TAG = "overlayBMP";
 		Log.d(TAG,"Bitmap Ovelray Start.");
 		//ARGB_8888,RGB_565,ARGB_4444
 		int width = under.getWidth();
