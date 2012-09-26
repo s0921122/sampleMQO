@@ -13,7 +13,7 @@ import android.os.Environment;
 import android.util.Log;
 
 public  class SdLog {
-	private final static String LOGDIR = Environment.getExternalStorageDirectory().getPath() + "/hoge/";
+	private final static String LOGDIR = Environment.getExternalStorageDirectory().getPath() + "/SdLog/";
 	private final static String SDFILE = LOGDIR+"log.txt";
 	private static boolean enable = true;
 	static public void put(int text) {

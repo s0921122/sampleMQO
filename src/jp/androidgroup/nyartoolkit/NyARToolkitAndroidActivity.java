@@ -102,6 +102,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	int count_Rotate = 0;
 	int count_Scale = 0;
 	int count_ScreenCapture = 0;
+	private int [] cgframe = new int[PAT_MAX];
 	
 	// for model renderer
 	private static final int CROP_MSG = 1;
@@ -264,6 +265,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].enables(gl, 10.0f);
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
+		cgframe[id]++;
 	}
 	
 
@@ -328,19 +330,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		case 0:
 			mode = 0;
 			count_Position++;
-			SdLog.put("count_Position" + count_Position);
+			SdLog.put("count_Position = " + count_Position);
 			return true;
 
 		case 1:
 			mode = 1;
 			count_Rotate++;
-			SdLog.put(count_Rotate);
+			SdLog.put("count_Rotate = " + count_Rotate);
 			return true;
 
 		case 2:
 			mode = 2;
 			count_Scale++;
-			SdLog.put(count_Scale);
+			SdLog.put("count_Scale = " + count_Scale);
 			return true;
 		case 3:
 			if(!displayflag){
@@ -352,7 +354,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		case 4:
 			Shot();
 			count_ScreenCapture++;
-			SdLog.put("ScreenCapture" + count_ScreenCapture);
+			SdLog.put("ScreenCapture = " + count_ScreenCapture);
 			return true;
 		}
 		return false;
