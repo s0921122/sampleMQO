@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
-
 import javax.microedition.khronos.opengles.GL10;
 
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndMarkerSystem;
@@ -38,7 +37,6 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-
 /**
  * Hiroマーカの上にカラーキューブを表示します。
  * 定番のサンプルです。
@@ -49,7 +47,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	// Log認識用タグ
 	private static final String TAG = "NyARToolkitAndroid";
-	
+
 	CameraPreview _camera_preview;
 	AndGLView _glv;
 	Camera.Size _cap_size;
@@ -99,6 +97,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// GLの描写部分のBitmap
 	Bitmap GLBitmap;
 
+	// Log用カウント
+	int count_Position = 0;
+	int count_Rotate = 0;
+	int count_Scale = 0;
+	int count_ScreenCapture = 0;
+	
 	// for model renderer
 	private static final int CROP_MSG = 1;
 	private static final int FIRST_TIME_INIT = 2;
@@ -323,14 +327,20 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		switch (item.getItemId()) {
 		case 0:
 			mode = 0;
+			count_Position++;
+			SdLog.put("count_Position" + count_Position);
 			return true;
 
 		case 1:
 			mode = 1;
+			count_Rotate++;
+			SdLog.put(count_Rotate);
 			return true;
 
 		case 2:
 			mode = 2;
+			count_Scale++;
+			SdLog.put(count_Scale);
 			return true;
 		case 3:
 			if(!displayflag){
@@ -341,6 +351,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			return true;
 		case 4:
 			Shot();
+			count_ScreenCapture++;
+			SdLog.put("ScreenCapture" + count_ScreenCapture);
 			return true;
 		}
 		return false;
