@@ -328,6 +328,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		case 0:
 			mode = 0;
 			count_Position++;
+			// [ToMod]Logだからカウント値を出力する必要はない
+			// 操作対象となっているモデルのIDを出力すること
+			// by Takano
 			SdLog.put("count_Position = " + count_Position);
 			return true;
 
