@@ -261,7 +261,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].enables(gl, 10.0f);
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
-//		cgframe[id];
+		cgframe[id]++;
+		SdLog.put(id + "フレーム = " + cgframe[id]);
 	}
 	
 
