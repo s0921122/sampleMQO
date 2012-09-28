@@ -466,7 +466,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		// モデル名配列をセット
 		it.putExtra("FixationModel", models);
 		// 遷移先をセット
-		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.QuestActivity");
+		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.TestActivity");
 		// リザルト付きアクティビティースタート
 		startActivityForResult(it, FIXATION_MODEL);
 	}
