@@ -19,6 +19,7 @@ import jp.nyatla.kGLModel.KGLException;
 import jp.nyatla.kGLModel.KGLModelData;
 import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -48,6 +49,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	// Log認識用タグ
 	private static String TAG = "NyARToolkitAndroid";
+	// ActivityResulutの認識コード
+	private static final int FIXATION_MODEL= 1;
 
 	CameraPreview _camera_preview;
 	AndGLView _glv;
@@ -56,9 +59,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// マーカーの数
 	private static final int PAT_MAX = 2;
 	// モデルの名前配列
-	private static final String[] models = new String[PAT_MAX];
+	private static String[] models = new String[PAT_MAX];
 	// モデルデータ
 	private KGLModelData[] model_data = new KGLModelData[PAT_MAX];
+	
+	private String requestName = "";
 
 	// Modelの制御
 	float lastX = 0;
@@ -72,7 +77,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	int screen_w,screen_h;
 
 	
-	// 画面中央当たりの姿勢制御？
+	// 固定表示をするときに使う姿勢制御の変数
 	float[] center = new float[]{
 			0.99548185f,
 			0.091270804f,
@@ -100,7 +105,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	boolean isGLBitmap = false;
 	// GLの描写部分のBitmap
 	Bitmap GLBitmap;
-
+	// 固定表示を行うかのフラグ
+	boolean fixationflag = false;
+	
 	// Log用カウント
 	int count_Position = 0;
 	int count_Rotate = 0;
@@ -233,6 +240,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				// フラグが立ってるときGL描写部分を画像で保存
 				glScreenCapture(gl);
 			}
+			if(fixationflag){
+				// フラグが立っているときモデルを固定表示
+				drawModelDataFixation(gl, requestName);
+			}
 		}catch(Exception e)
 		{
 			ex=e;
@@ -317,7 +328,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 2, Menu.NONE, "Scale");
 		menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
 		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
-
+		menu.add(Menu.NONE, 5, Menu.NONE, "SlectFixationModel");
+		
 		return true;
 	}
 
@@ -356,6 +368,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			Shot();
 			count_ScreenCapture++;
 			SdLog.put("ScreenCapture = " + count_ScreenCapture);
+			return true;
+		case 5:
+			if(fixationflag){
+				fixationflag = false;
+			}else{
+				selectFixationModel();
+			}
 			return true;
 		}
 		return false;
@@ -421,6 +440,36 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	public void setYpos(float f) {
 		this.ypos += f;
 	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		// インテントのリザルトを受け取る
+		if(requestCode == FIXATION_MODEL){
+			if(resultCode == RESULT_OK){
+				// 固定表示フラグを立てる
+				fixationflag = true;
+				// 表示するモデル名をセット
+				requestName = data.getStringExtra("selectitem");
+				Log.d(TAG,"getItemName " + data.getStringExtra("selectitem"));
+			}
+		}
+	}
+	
+	/**
+	 *  固定表示させるモデルを選択する（アクティビティー切り替え）
+	 *  
+	 */
+	private void selectFixationModel(){
+		// インテント作成
+		Intent it = new Intent();
+		// モデル名配列をセット
+		it.putExtra("FixationModel", models);
+		// 遷移先をセット
+		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.TestActivity");
+		// リザルト付きアクティビティースタート
+		startActivityForResult(it, FIXATION_MODEL);
+	}
 
 
 	/**
@@ -430,7 +479,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * 参考 : http://android.roof-balcony.com/camera/preview-get/
 	 * 
 	 * @author s0921122
-	 * @date 12/09/22
 	 * @version 1.0
 	 */
 	private void Shot(){
