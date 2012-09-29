@@ -38,10 +38,7 @@ public class QuestActivity extends Activity implements OnItemClickListener{
 			ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_expandable_list_item_1,getlist);
 			listview.setAdapter(adapter);
 			listview.setOnItemClickListener(this);
-			
-			/*
-			 * 選択後カメラプレビューでエラーが出て落ちます．
-			 */
+
 	 }
 
 	@Override

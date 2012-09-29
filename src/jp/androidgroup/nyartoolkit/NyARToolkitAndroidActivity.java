@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndMarkerSystem;
@@ -25,17 +26,14 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ViewGroup.LayoutParams;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -139,7 +137,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	{
 		super.onStart();
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
+		// エラー回避用
+		_evlistener.clear();
+		// エラー回避用
+		fr.removeAllViews();
 		//カメラの取得
+		Log.e("OnStart", "new CameraPreview");
 		this._camera_preview=new CameraPreview(this);
 		// カメラの解像度
 		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
@@ -156,6 +159,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		//GLview
 		this._glv=new AndGLView(this);
 		fr.addView(this._glv, 0,new LayoutParams(screen_w,screen_h));
+		
+		
 	}
 
 	NyARAndSensor _ss;
@@ -236,13 +241,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				// フラグがた立っているときモデルを固定表示
 				drawModelDataFixation(gl, models[1]);
 			}
-			if(screenCapture){
-				// フラグが立ってるときGL描写部分を画像で保存
-				glScreenCapture(gl);
-			}
 			if(fixationflag){
 				// フラグが立っているときモデルを固定表示
 				drawModelDataFixation(gl, requestName);
+			}
+			if(screenCapture){
+				// フラグが立ってるときGL描写部分を画像で保存
+				glScreenCapture(gl);
 			}
 		}catch(Exception e)
 		{
@@ -301,7 +306,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(center,0);
 		
-		// 姿勢位置をLogに出力
+		// 固定表示のための姿勢位置を取得するためのLog
 //		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
 //		String str = "";
 //		float[] mat = this._ms.getGlMarkerMatrix(id);
@@ -466,7 +471,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		// モデル名配列をセット
 		it.putExtra("FixationModel", models);
 		// 遷移先をセット
-		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.TestActivity");
+		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.QuestActivity");
 		// リザルト付きアクティビティースタート
 		startActivityForResult(it, FIXATION_MODEL);
 	}
@@ -504,8 +509,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			cameraBitmap.setPixels(rgb, 0, width, 0, 0, width, height); 
 			Log.d(TAG,"Camera Preview Capture Create done.");
 			
+			// GL描写部分のスクリーンキャプチャを撮るフラグを立てる
 			screenCapture = true;
 
+			// GL描写部分のスクリーンキャプチャができるまで待機
 			while(true){
 				if(isGLBitmap) break;
 			}
@@ -528,8 +535,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private void glScreenCapture(GL10 gl){
 		TAG = "glScreenCapture";
 		Log.d(TAG,"GL Drawing Screen Capture Start.");
-		// キャプチャフラグを立てる
+		// キャプチャフラグを下げる
 		screenCapture = false;
+		// スクリーンキャプチャする範囲
 		int takeWidth = screen_w;
 		int takeHeight = screen_h;
 		int[] tmp = new int[takeHeight*takeWidth];
@@ -552,8 +560,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			} 
 		} 
 		// アルファありのBitmapを作成する
+		// この時にリサイズで保存はできない（変な画像になる）
 		Bitmap temp = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
-		//　Bitmapをカメラプレビューサイズにリサイズ
+		//　作成したBitmapを元にカメラプレビューサイズにリサイズしたBitmapを作成
 		this.GLBitmap = Bitmap.createScaledBitmap(temp, _cap_size.width, _cap_size.height, true);
 		temp.recycle();
 		
