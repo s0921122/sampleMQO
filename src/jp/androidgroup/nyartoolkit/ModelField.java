@@ -1,5 +1,5 @@
 /**
- * 定数クラス予定
+ * モデルを持つクラス
  * 
  */
 package jp.androidgroup.nyartoolkit;

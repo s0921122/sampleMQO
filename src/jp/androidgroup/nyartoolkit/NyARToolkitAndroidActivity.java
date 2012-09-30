@@ -56,10 +56,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	
 	// マーカーの数
 	private static final int PAT_MAX = 2;
-	// モデルの名前配列
-	private static String[] models = new String[PAT_MAX];
-	// モデルデータ
-	private KGLModelData[] model_data = new KGLModelData[PAT_MAX];
+
 	
 	private String requestName = "";
 
@@ -136,6 +133,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	public void onStart()
 	{
 		super.onStart();
+		
+		long start = System.currentTimeMillis();
+		
 		FrameLayout fr=((FrameLayout)this.findViewById(R.id.sketchLayout));
 		// エラー回避用
 		_evlistener.clear();
@@ -159,41 +159,61 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		//GLview
 		this._glv=new AndGLView(this);
 		fr.addView(this._glv, 0,new LayoutParams(screen_w,screen_h));
+		long end = System.currentTimeMillis();
 		
+		Log.d(TAG,"onStart Time " + (end - start) + "ms");
 		
 	}
 
 	NyARAndSensor _ss;
 	NyARAndMarkerSystem _ms;
 	private int[] _mid = new int[PAT_MAX];
+	// モデルの名前配列
+	private static String[] modelNames = new String[PAT_MAX];
+	// モデルデータ
+	private static KGLModelData[] model_data = new KGLModelData[PAT_MAX];
 	AndGLTextLabel text;
 	AndGLBox box;
 	AndGLFpsLabel fps;
 
 	public void setupGL(GL10 gl)
 	{
+		TAG = "setupGL";
+		long start = System.currentTimeMillis();
 		try
 		{
+			Log.d(TAG,"GL Setup Start.");
 			AssetManager assetMng = getResources().getAssets();
 			//create sensor controller.
 			this._ss=new NyARAndSensor(this._camera_preview,this._cap_size.width,this._cap_size.height,30);
 			//create marker system
 			this._ms=new NyARAndMarkerSystem(new NyARMarkerSystemConfig(this._cap_size.width,this._cap_size.height));
+			
+			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
+			
 			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
 
+			for(String str : modelNames){
+				if(str == null) Log.d(TAG,"modelNames is Null");
+			}
 			// モデルの名前
-			models[0] = "Kiageha.mqo";
-			models[1] = "miku01.mqo";
-			
-			try {
-				//LocalContentProvider content_provider=new LocalContentProvider("Kiageha.mqo");
-				//model_data = KGLModelData.createGLModel(gl,null,content_provider,0.015f, KGLExtensionCheck.IsExtensionSupported(gl,"GL_ARB_vertex_buffer_object"));
-				model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, models[0], 0.15f);
-				model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, models[1], 0.06f);
-			} catch (KGLException e) {
-				e.printStackTrace();
-				throw new NyARException(e);
+			modelNames[0] = "Kiageha.mqo";
+			modelNames[1] = "miku01.mqo";
+
+			for(KGLModelData data : model_data){
+				if(data == null) Log.d(TAG,"model_data is Null");
+			}
+			if(model_data[PAT_MAX-1] == null){
+				try {
+					//LocalContentProvider content_provider=new LocalContentProvider("Kiageha.mqo");
+					//model_data = KGLModelData.createGLModel(gl,null,content_provider,0.015f, KGLExtensionCheck.IsExtensionSupported(gl,"GL_ARB_vertex_buffer_object"));
+					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
+					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+				} catch (KGLException e) {
+					e.printStackTrace();
+					throw new NyARException(e);
+				}
 			}
 
 			this._ss.start();
@@ -205,6 +225,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			this._debug=new AndGLDebugDump(this._glv);
 			this.fps=new AndGLFpsLabel(this._glv,"MarkerPlaneActivity");
 			this.fps.prefix=this._cap_size.width+"x"+this._cap_size.height+":";
+			
+			long end = System.currentTimeMillis();
+			Log.d(TAG,"GL Setup End.");
+			Log.d(TAG,"setupGL Time " + (end - start) + "ms");
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -212,24 +236,24 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			this.finish();
 		}
 	}
-	
-	AndGLDebugDump _debug=null;
-	
-	/**
-	 * 継承したクラスで表示したいものを実装してください
-	 * @param gl
-	 */
-	public void drawGL(GL10 gl)
-	{
-		try{
-			//背景塗り潰し色の指定
-			gl.glClearColor(0,0,0,0);
-			//背景塗り潰し
-			gl.glClear(GL10.GL_COLOR_BUFFER_BIT|GL10.GL_DEPTH_BUFFER_BIT);
-			if(ex!=null){
-				_debug.draw(ex);
-				return;
-			}
+
+		AndGLDebugDump _debug=null;
+
+		/**
+		 * 継承したクラスで表示したいものを実装してください
+		 * @param gl
+		 */
+		public void drawGL(GL10 gl)
+		{
+			try{
+				//背景塗り潰し色の指定
+				gl.glClearColor(0,0,0,0);
+				//背景塗り潰し
+				gl.glClear(GL10.GL_COLOR_BUFFER_BIT|GL10.GL_DEPTH_BUFFER_BIT);
+				if(ex!=null){
+					_debug.draw(ex);
+					return;
+				}
 			fps.draw(0, 0);
 			synchronized(this._ss){
 				this._ms.update(this._ss);
@@ -239,7 +263,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			}
 			if(displayflag){
 				// フラグがた立っているときモデルを固定表示
-				drawModelDataFixation(gl, models[1]);
+				drawModelDataFixation(gl, modelNames[1]);
 			}
 			if(fixationflag){
 				// フラグが立っているときモデルを固定表示
@@ -294,8 +318,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		TAG = "drawModelDataFixation";
 		int id = -1;
 		// 名前を検索
-		for(int i=0;i<models.length;i++){
-			if(models[i].startsWith(name)){
+		for(int i=0;i<modelNames.length;i++){
+			if(modelNames[i].startsWith(name)){
 				// 一致する添え字をセット
 				id = i;
 				break;
@@ -449,6 +473,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		TAG = "onActivityResult";
 		// インテントのリザルトを受け取る
 		if(requestCode == FIXATION_MODEL){
 			if(resultCode == RESULT_OK){
@@ -469,7 +494,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		// インテント作成
 		Intent it = new Intent();
 		// モデル名配列をセット
-		it.putExtra("FixationModel", models);
+		it.putExtra("FixationModel", modelNames);
 		// 遷移先をセット
 		it.setClassName("jp.androidgroup.nyartoolkit","jp.androidgroup.nyartoolkit.QuestActivity");
 		// リザルト付きアクティビティースタート

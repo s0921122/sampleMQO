@@ -16,7 +16,7 @@ public class QuestActivity extends Activity implements OnItemClickListener{
 	// モデルを３つくらい、リスト表示する
 	// リスト上でモデルをクリックしたら、NyARTOolkitAndroidActivityに移行し、
 	// クリックしたモデルの3DCGを表示する
-	private static String TAG ="TestActivity";
+	private static String TAG ="QuestActivity";
 	
 	@Override
 	    public void onCreate(Bundle savedInstanceState) {
