@@ -169,9 +169,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	NyARAndMarkerSystem _ms;
 	private int[] _mid = new int[PAT_MAX];
 	// モデルの名前配列
-	private static String[] modelNames = new String[PAT_MAX];
+	private String[] modelNames = new String[PAT_MAX];
 	// モデルデータ
-	private static KGLModelData[] model_data = new KGLModelData[PAT_MAX];
+	private KGLModelData[] model_data = new KGLModelData[PAT_MAX];
 	AndGLTextLabel text;
 	AndGLBox box;
 	AndGLFpsLabel fps;
@@ -358,6 +358,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
 		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
 		menu.add(Menu.NONE, 5, Menu.NONE, "SlectFixationModel");
+		menu.add(Menu.NONE, 6, Menu.NONE, "Exit");
 		
 		return true;
 	}
@@ -405,6 +406,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				selectFixationModel();
 			}
 			return true;
+		case 6:
+			finish();
+			break;
 		}
 		return false;
 	}
