@@ -4,17 +4,19 @@
  */
 package jp.androidgroup.nyartoolkit;
 
+import java.util.ArrayList;
+
 import jp.nyatla.kGLModel.KGLModelData;
 
 public class ModelField {
-	KGLModelData model = null;
-	String modelName = "";
+	ArrayList<String> modelName = new ArrayList<String>();
+	ArrayList<KGLModelData> modelData = new ArrayList<KGLModelData>();
 	
-	public String getModelName() {
-		return modelName;
-	}
-	public void setModelName(String modelName) {
-		this.modelName = modelName;
+	public ModelField(){
 	}
 	
+	public ModelField(String name,KGLModelData data){
+		modelName.add(name);
+		modelData.add(data);
+	}
 }

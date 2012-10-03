@@ -350,6 +350,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].disables(gl);
 	}
 
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu){
 		// メニューアイテムの追加
 		menu.add(Menu.NONE, 0, Menu.NONE, "Position");
@@ -362,7 +363,18 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		
 		return true;
 	}
-
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		if(displayflag){
+			menu.findItem(3).setTitle("HideClear");
+		}else{
+			menu.findItem(3).setTitle("ShowModel");
+		}
+		return super.onPrepareOptionsMenu(menu);
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 
 		// addしたときのIDで識別
@@ -402,6 +414,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		case 5:
 			if(fixationflag){
 				fixationflag = false;
+				selectFixationModel();
 			}else{
 				selectFixationModel();
 			}
