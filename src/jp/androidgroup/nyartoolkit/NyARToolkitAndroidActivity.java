@@ -197,6 +197,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			for(String str : modelNames){
 				if(str == null) Log.d(TAG,"modelNames is Null");
 			}
+			
 			// モデルの名前
 			modelNames[0] = "Kiageha.mqo";
 			modelNames[1] = "miku01.mqo";
@@ -214,6 +215,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					e.printStackTrace();
 					throw new NyARException(e);
 				}
+			}else{
+				// そのままではテクスチャが貼られないのであらためて貼る
+				model_data[0].reloadTexture(gl);
+				model_data[1].reloadTexture(gl);
 			}
 
 			this._ss.start();
