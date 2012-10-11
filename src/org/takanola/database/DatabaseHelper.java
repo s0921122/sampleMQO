@@ -18,6 +18,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public static final String DATABASE_NAME = "PERSONAL_DATABASE";
 	public static final String TABLE_NAME = "USER_MANIPULATION";
 	
+	// カラム名フィールド
+	public static final String COLUM_ID = "_id";
+	public static final String COLUM_MODEL_NAME = "model_name";
+	public static final String COLUM_MOVE = "move";
+	public static final String COLUM_ROTATE = "rotate";
+	public static final String COLUM_SCALE = "scale";
+	public static final String COLUM_CAPTURE = "capture";
+	public static final String COLUM_MARKER = "marker";
+	public static final String COLUM_USER_SELECT = "user_select";
+	public static final String COLUM_TIME_FRAME = "time_frame";
+	public static final String COLUM_FAVORITE = "favorite";
+	public static final String COLUM_DATE_HOUR = "date_hour";
+			
 	public DatabaseHelper(Context con){
 		super(con, DATABASE_NAME, null, DATABASE_VERSION);
 	}
@@ -34,20 +47,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	private void createTable(SQLiteDatabase database){
         try{
+        	String sql;
         	// テーブル作成
-        	String sql = "CREATE TABLE " + TABLE_NAME + " ("
-        			+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        			+ "model_name TEXT UNIQUE NOT NULL,"
-        			+ "move INTEGER,"
-        			+ "rotate INTEGER,"
-        			+ "scale INTEGER,"
-        			+ "capture INTEGER,"
-        			+ "marker INTEGER,"
-        			+ "use_select INTEGER,"
-        			+ "time_frame TIME,"
-        			+ "favorite INTEGER,"
-        			+ "date_hour DATE"
-        			+ ")";
+        	
+//        	sql = "CREATE TABLE " + TABLE_NAME + " ("
+//        			+ COLUM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+//        			+ COLUM_MODEL_NAME + " TEXT UNIQUE NOT NULL,"
+//        			+ COLUM_MOVE + " INTEGER,"
+//        			+ COLUM_ROTATE + " INTEGER,"
+//        			+ COLUM_SCALE + " INTEGER,"
+//        			+ COLUM_CAPTURE + " INTEGER,"
+//        			+ COLUM_MARKER + " INTEGER,"
+//        			+ COLUM_USER_SELECT + " INTEGER,"
+//        			+ COLUM_TIME_FRAME + " TIME,"
+//        			+ COLUM_FAVORITE + " INTEGER,"
+//        			+ COLUM_DATE_HOUR + " DATE"
+//        			+ ")";
+        	
+        	StringBuilder sr = new StringBuilder()
+        	.append("CREATE TABLE ").append( TABLE_NAME ).append(" ( ")
+        	.append( COLUM_ID ).append(" INTEGER PRIMARY KEY AUTOINCREMENT,")
+        	.append( COLUM_MODEL_NAME ).append(" TEXT UNIQUE NOT NULL,")
+        	.append( COLUM_MOVE ).append(" INTEGER,")
+        	.append( COLUM_ROTATE ).append(" INTEGER,")
+        	.append( COLUM_SCALE ).append(" INTEGER,")
+        	.append( COLUM_CAPTURE ).append(" INTEGER,")
+        	.append( COLUM_MARKER ).append(" INTEGER,")
+        	.append( COLUM_USER_SELECT ).append(" INTEGER,")
+        	.append( COLUM_TIME_FRAME ).append(" INTEGER,")
+        	.append( COLUM_FAVORITE ).append(" INTEGER,")
+        	.append( COLUM_DATE_HOUR ).append(" DATE")
+        	.append(" )");
+        	sql = new String(sr);
+        	
         	database.execSQL(sql);
         }catch(Exception e){
         	// テーブル作成失敗かすでにあるとき

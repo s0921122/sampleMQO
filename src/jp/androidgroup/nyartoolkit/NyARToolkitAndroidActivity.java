@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 import org.takanola.database.DatabaseActional;
+import org.takanola.database.DatabaseHelper;
 
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndMarkerSystem;
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndSensor;
@@ -59,7 +60,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// マーカーの数
 	private static final int PAT_MAX = 2;
 
-	DatabaseActional action = new DatabaseActional(this);
+	// データベース
+	DatabaseActional databaseAction = new DatabaseActional(this);
 
 	private String requestName = "";
 
@@ -513,6 +515,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				fixationflag = true;
 				// 表示するモデル名をセット
 				requestName = data.getStringExtra("selectitem");
+				// データベースに反映
+				databaseAction.weighUpInsert(requestName, DatabaseHelper.COLUM_USER_SELECT, 1);
 				Log.d(TAG,"getItemName " + data.getStringExtra("selectitem"));
 			}
 		}
