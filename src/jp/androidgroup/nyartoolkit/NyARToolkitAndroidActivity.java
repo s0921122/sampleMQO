@@ -7,8 +7,8 @@ import java.nio.IntBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import org.takanola.database.DatabaseActional;
-import org.takanola.database.DatabaseHelper;
+import org.takanolab.database.DatabaseActional;
+import org.takanolab.database.DatabaseHelper;
 
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndMarkerSystem;
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndSensor;
@@ -60,9 +60,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// マーカーの数
 	private static final int PAT_MAX = 2;
 
-	// データベース
-	DatabaseActional databaseAction = new DatabaseActional(this);
-
+	// ユーザが選択したモデル名を受け取る変数
 	private String requestName = "";
 
 	// Modelの制御
@@ -393,26 +391,20 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		switch (item.getItemId()) {
 		case 0:
 			mode = 0;
-			if(sdflag){
-				count_Position++;
-				SdLog.put("count_Position = " + count_Position);
-			}
+			count_Position++;
+			if(sdflag) SdLog.put("count_Position = " + count_Position);
 			return true;
 
 		case 1:
 			mode = 1;
-			if(sdflag){
-				count_Rotate++;
-				SdLog.put("count_Rotate = " + count_Rotate);
-			}
+			count_Rotate++;
+			if(sdflag) SdLog.put("count_Rotate = " + count_Rotate);
 			return true;
 
 		case 2:
 			mode = 2;
-			if(sdflag){
-				count_Scale++;
-				SdLog.put("count_Scale = " + count_Scale);
-			}
+			count_Scale++;
+			if(sdflag) SdLog.put("count_Scale = " + count_Scale);
 			return true;
 		case 3:
 			if(!displayflag){
@@ -423,10 +415,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			return true;
 		case 4:
 			Shot();
-			if(sdflag){
-				count_ScreenCapture++;
-				SdLog.put("ScreenCapture = " + count_ScreenCapture);
-			}
+			count_ScreenCapture++;
+			if(sdflag) SdLog.put("ScreenCapture = " + count_ScreenCapture);
 			return true;
 		case 5:
 			if(fixationflag){
@@ -515,8 +505,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				fixationflag = true;
 				// 表示するモデル名をセット
 				requestName = data.getStringExtra("selectitem");
-				// データベースに反映
-				databaseAction.weighUpInsert(requestName, DatabaseHelper.COLUM_USER_SELECT, 1);
 				Log.d(TAG,"getItemName " + data.getStringExtra("selectitem"));
 			}
 		}

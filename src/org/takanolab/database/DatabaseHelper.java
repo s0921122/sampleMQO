@@ -2,11 +2,11 @@
  * データベースクラス
  * 
  * @author s0921122
- * @version 1.0
+ * @version 1.1
  * 
  */
 
-package org.takanola.database;
+package org.takanolab.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -45,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	}
 	
-	private void createTable(SQLiteDatabase database){
+	public void createTable(SQLiteDatabase database){
         try{
         	String sql;
         	// テーブル作成
@@ -68,7 +68,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         	.append("CREATE TABLE ").append( TABLE_NAME ).append(" ( ")
         	.append( COLUM_ID ).append(" INTEGER PRIMARY KEY AUTOINCREMENT,")
         	.append( COLUM_MODEL_NAME ).append(" TEXT UNIQUE NOT NULL,")
-        	.append( COLUM_MOVE ).append(" INTEGER,")
+        	.append( COLUM_MOVE ).append(" INTEGER DEFAULT 0,")
         	.append( COLUM_ROTATE ).append(" INTEGER,")
         	.append( COLUM_SCALE ).append(" INTEGER,")
         	.append( COLUM_CAPTURE ).append(" INTEGER,")
@@ -85,6 +85,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         	// テーブル作成失敗かすでにあるとき
         	System.out.println(e.toString());
         }
+	}
+	
+	public void resetAutoincrement(SQLiteDatabase database){
+		database.execSQL("update sqlite_sequence set seq = 0 where name='" + TABLE_NAME + "'");
 	}
 
 }

@@ -6,7 +6,7 @@ import java.io.UnsupportedEncodingException;
 
 import jp.androidgroup.nyartoolkit.R;
 
-import org.takanola.database.DatabaseHelper;
+import org.takanolab.database.DatabaseHelper;
 
 import android.app.Activity;
 import android.content.ContentValues;

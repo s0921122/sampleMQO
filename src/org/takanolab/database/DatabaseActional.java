@@ -2,9 +2,10 @@
  * データベースの操作をするクラスを作ってみた
  * 
  * @author s0921122
+ * @version 1.2
  */
 
-package org.takanola.database;
+package org.takanolab.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,7 +17,14 @@ public class DatabaseActional {
 	
 	private static final String TAG = "DatabaseActional";
 	DatabaseHelper helper = null;
-	SQLiteDatabase db;
+	SQLiteDatabase db = null;
+	
+	// 前回更新のモデル名を保持
+	String storeName = "";
+	// 前回更新のカラム名を保持
+	String storeColum = "";
+	// 前回更新の値を保持
+	int storeInt = 0;
 	
 	/**
 	 * 何もないです
@@ -56,18 +64,15 @@ public class DatabaseActional {
 	/**
 	 * カーソルから内容を取得します．（int専用）
 	 * 
+	 * @version 1.2
 	 * @param csr 検索結果のカーソル
 	 * @return カラムの内容(int)
 	 */
-	public int[] getNums(Cursor csr){
-		int i = 0;
-		int[] nums = new int[csr.getCount()];
-		while(csr.moveToNext()){
-			nums[i] = csr.getInt(0);
-			i++;
-		}
+	public int getNum(Cursor csr){
+		csr.moveToFirst();
+		int num = csr.getInt(0);
 		csr.close();
-		return nums;
+		return num;
 	}
 	
 	/**
@@ -104,11 +109,11 @@ public class DatabaseActional {
 	/**
 	 * アップデートを行います．
 	 * 
-	 * @version 1.0
-	 * @param name モデル名
-	 * @param colum 更新カラム名
-	 * @param num 更新する値
-	 * @return 適用されたレコード数
+	 * @version 1.2
+	 * @param name 更新するモデル名
+	 * @param colum 更新するカラム名
+	 * @param num 更新する数値
+	 * @return 適用レコード数
 	 */
 	public int update(String name, String colum, int num){
 		Log.d(TAG,"updateData : " + name);
@@ -117,8 +122,8 @@ public class DatabaseActional {
 		
 		int re = 0;
 		ContentValues val = new ContentValues();
-		try{
-			val.put(colum,num);
+		try{			
+			val.put(colum, num);
 			re = db.update(DatabaseHelper.TABLE_NAME, val, "model_name = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
@@ -132,7 +137,7 @@ public class DatabaseActional {
 	/**
 	 * アップデートを行います．
 	 * 
-	 * @version 1.1
+	 * @version 1.2
 	 * @param name モデル名
 	 * @param colum 更新するカラム名
 	 * @param untilNow 格納されている数値
@@ -147,7 +152,12 @@ public class DatabaseActional {
 		int re = 0;
 		ContentValues val = new ContentValues();
 		try{
-			val.put(colum,untilNow + addNum);
+			// 再利用できるように変数に格納
+			storeName = name;
+			storeColum = colum;
+			int newNum = storeInt = untilNow + addNum;
+			
+			val.put(colum, newNum);
 			re = db.update(DatabaseHelper.TABLE_NAME, val, "model_name = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
@@ -159,23 +169,31 @@ public class DatabaseActional {
 	}
 	
 	/**
+	 * データがデータベースにあるかを判断し、<br>
 	 * データの挿入または更新を行います．
 	 * 
-	 * @version 1.1
+	 * @version 1.2
 	 * @param name モデル名
 	 * @param colum カラム名
 	 * @param num 数値
 	 */
 	public void weighUpInsert(String name, String colum, int num){
 		Log.d(TAG,"Weigh up : " + name);
-		Cursor csr = select(name, colum);
-		if(csr.moveToFirst()){
-			int untilNow = csr.getInt(0);
-			update(name, colum, untilNow, num);
+		// 前回と同じモデル名とカラムなら検索を行わずに更新
+		if(storeName == name && storeColum == colum){
+			update(name, colum, storeInt, num);
 			timeStamp(name);
 		}else{
-			insert(name, colum, num);
-			timeStamp(name);
+			// 検索してヒットするかしないかで処理を分ける
+			Cursor csr = select(name, colum);
+			if(csr.moveToFirst()){
+				int untilNow = csr.getInt(0);
+				update(name, colum, untilNow, num);
+				timeStamp(name);
+			}else{
+				insert(name, colum, num);
+				timeStamp(name);
+			}
 		}
 	}
 	
@@ -207,7 +225,7 @@ public class DatabaseActional {
 	 * テーブルを削除します．<br>
 	 * デバッグ用
 	 * 
-	 * @vesion 1.0
+	 * @version 1.0
 	 */
 	public void deleteTable(){
 		Log.d(TAG,"Delete Table");
@@ -222,7 +240,7 @@ public class DatabaseActional {
 	 * 現在時間をアップデートします．<br>
 	 * 格納例  「2012-10-11 22:46:13」
 	 * 
-	 * @vesion 1.1
+	 * @version 1.1
 	 * @param name モデル名
 	 */
 	public void timeStamp(String name){
@@ -236,7 +254,7 @@ public class DatabaseActional {
 	
 	/**
 	 * 終了処理．<br>
-	 * DatabaseHelperとSQLiteDAtabaseをclose．
+	 * DatabaseHelperとSQLiteDAtabaseをcloseします．
 	 * 
 	 * @version 1.0
 	 */
@@ -244,5 +262,15 @@ public class DatabaseActional {
 		db.close();
 		helper.close();
 	}
-
+	
+	/**
+	 * テーブル削除して、新しくテーブル作成します．<br>
+	 * ついでにオートインクリメントもリセット．
+	 * 
+	 */
+	public void reCreateTable(){
+		deleteTable();
+		helper.createTable(db);
+		helper.resetAutoincrement(db);
+	}
 }
