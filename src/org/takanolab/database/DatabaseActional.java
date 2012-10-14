@@ -182,17 +182,19 @@ public class DatabaseActional {
 		// 前回と同じモデル名とカラムなら検索を行わずに更新
 		if(storeName == name && storeColum == colum){
 			update(name, colum, storeInt, num);
-			timeStamp(name);
+			setTimeStamp(name);
 		}else{
 			// 検索してヒットするかしないかで処理を分ける
 			Cursor csr = select(name, colum);
 			if(csr.moveToFirst()){
 				int untilNow = csr.getInt(0);
 				update(name, colum, untilNow, num);
-				timeStamp(name);
+				setTimeStamp(name);
+				csr.close();
 			}else{
 				insert(name, colum, num);
-				timeStamp(name);
+				setTimeStamp(name);
+				csr.close();
 			}
 		}
 	}
@@ -211,7 +213,7 @@ public class DatabaseActional {
 		
 		int re=0;
 		try{
-		re =  db.delete(DatabaseHelper.MANIPULATION_TABLE, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
+			re =  db.delete(DatabaseHelper.MANIPULATION_TABLE, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
 		db.setTransactionSuccessful();
 		}catch(Exception e){
 			e.printStackTrace();
@@ -243,7 +245,7 @@ public class DatabaseActional {
 	 * @version 1.1
 	 * @param name モデル名
 	 */
-	public void timeStamp(String name){
+	private void setTimeStamp(String name){
 		StringBuilder str = new StringBuilder();
 		str.append("UPDATE ").append(DatabaseHelper.MANIPULATION_TABLE).append(" SET ")
 		.append(DatabaseHelper.COLUM_DATE_HOUR).append(" = datetime('now', 'localtime') WHERE ")
@@ -269,7 +271,7 @@ public class DatabaseActional {
 	 * @version 1.2
 	 * @param tableName リセットしたいテーブル名
 	 */
-	public void resetAutoincrement(String tableName){
+	private void resetAutoincrement(String tableName){
 		db.execSQL("update sqlite_sequence set seq = 0 where name='" + tableName + "'");
 	}
 	
