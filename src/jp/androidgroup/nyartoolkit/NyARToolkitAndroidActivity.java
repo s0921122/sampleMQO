@@ -60,7 +60,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private static final int PAT_MAX = 2;
 
 	// 使用するモデルのパス
-	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/";
+	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
 	// ユーザが選択したモデル名を受け取る変数
 	private String requestName = "";
 
@@ -195,24 +195,26 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			//create marker system
 			this._ms=new NyARAndMarkerSystem(new NyARMarkerSystemConfig(this._cap_size.width,this._cap_size.height));
 
-			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
+//			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
 
 			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
 
-			for(String str : modelNames){
-				if(str == null) Log.d(TAG,"modelNames is Null");
-			}
+//			for(String str : modelNames){
+//				if(str == null) Log.d(TAG,"modelNames is Null");
+//			}
 
 			// モデルの名前
-			modelNames[0] = "Kiageha.mqo";
+			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
 			modelNames[1] = "miku01.mqo";
 
-			for(KGLModelData data : model_data){
-				if(data == null) Log.d(TAG,"model_data is Null");
-			}
+//			for(KGLModelData data : model_data){
+//				if(data == null) Log.d(TAG,"model_data is Null");
+//			}
+			
 			if(model_data[PAT_MAX-1] == null){
 				try {
+					// アセットから読み込み
 //					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
 //					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
 					// 外部ストレージから読み込み

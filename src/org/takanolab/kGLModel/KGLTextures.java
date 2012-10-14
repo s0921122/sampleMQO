@@ -173,8 +173,13 @@ public class KGLTextures {
     protected Bitmap loadTexture(String texname, String alpname)
     {
 		try {
-			//InputStream is = am.open(texname);
-			InputStream is = new FileInputStream(new File(modelPath + texname));
+			InputStream is;
+			if(modelPath.equals("")){
+				is = am.open(texname);
+			}else{
+//				Log.d("Load Texture","Load File " + modelPath + texname);
+				is = new FileInputStream(new File(modelPath + texname));
+			}
 			
 			return BitmapFactory.decodeStream(is);
 		} catch (Throwable e) {
