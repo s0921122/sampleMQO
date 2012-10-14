@@ -18,22 +18,19 @@
  *	<airmail(at)ebony.plala.or.jp>
  * 
  */
-package jp.nyatla.kGLModel;
+package org.takanolab.kGLModel;
 
-import java.util.*;
-import java.nio.*;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.io.*;           // For File
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
-//import java.awt.image.*;    // For BufferedImage
-//import javax.imageio.*;     // For ImageIO
+import java.util.Collection;
+import java.util.HashMap;
 
-import javax.microedition.khronos.opengles.*;
+import javax.microedition.khronos.opengles.GL10;
 
-import android.content.res.*;
-import android.graphics.*;
-//import android.opengl.GLU;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
 
 /**
@@ -53,6 +50,17 @@ public class KGLTextures {
      * をキーにOpenGLのtexture name（int）を保存しているコンテナ<br>
      */
     private HashMap<String,Integer> texPool  = null ;
+    /**
+     * ストレージから読み込むパス
+     */
+    private String modelPath = "";
+    /**
+     * コンストラクタ
+     */
+    public KGLTextures(String modelPath){
+    	this.modelPath = modelPath;
+    	texPool = new HashMap<String, Integer>();
+    }
     /**
      * コンストラクタ
      * 
@@ -165,7 +173,9 @@ public class KGLTextures {
     protected Bitmap loadTexture(String texname, String alpname)
     {
 		try {
-			InputStream is = am.open(texname);
+			//InputStream is = am.open(texname);
+			InputStream is = new FileInputStream(new File(modelPath + texname));
+			
 			return BitmapFactory.decodeStream(is);
 		} catch (Throwable e) {
 		}

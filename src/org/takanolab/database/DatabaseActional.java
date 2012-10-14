@@ -254,7 +254,7 @@ public class DatabaseActional {
 	
 	/**
 	 * 終了処理．<br>
-	 * DatabaseHelperとSQLiteDAtabaseをcloseします．
+	 * DatabaseHelperとSQLiteDatabaseをcloseします．
 	 * 
 	 * @version 1.0
 	 */

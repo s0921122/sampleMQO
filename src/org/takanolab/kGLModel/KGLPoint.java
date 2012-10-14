@@ -18,7 +18,7 @@
  *	<airmail(at)ebony.plala.or.jp>
  * 
  */
-package jp.nyatla.kGLModel;
+package org.takanolab.kGLModel;
 
 /**
  * float型の頂点関連情報を保持、計算する為のクラス<br>

@@ -18,17 +18,17 @@
  *	<airmail(at)ebony.plala.or.jp>
  * 
  */
-package jp.nyatla.kGLModel;
-import java.io.* ;
-import java.nio.*;
+package org.takanolab.kGLModel;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.opengles.*;
-import android.opengl.GLU;
-import android.opengl.GLUtils;
+import javax.microedition.khronos.opengles.GL10;
 
-import android.content.res.*;
-import android.util.Log;
+import android.content.res.AssetManager;
 
 /**
  * JOGLを使用してファイルからモデルデータの読み込みと描画を行う<br>
@@ -167,6 +167,24 @@ public class KGLModelData {
  //           throw new KGLException();
     }
     /**
+     * 
+     * 外部ストレージから読み込みたい
+     * @param gl
+     * @param in_texPool
+     * @param modelPath
+     * @param msqname
+     * @param scale
+     * @return
+     * @throws KGLException
+     */
+    static public KGLModelData createGLModel(GL10 gl, KGLTextures in_texPool, String modelPath, String msqname, float scale) throws KGLException
+    {
+	//ファイル解析してMOQか判別したいけど、とりあえずMOQだと信じる。
+        return new KGLMetaseq(gl,in_texPool, modelPath, msqname, scale) ;
+ //           throw new KGLException();
+    }
+
+    /**
      * ＯｐｅｎＧＬへ登録したリソースを解放する<br>
      *
      */
@@ -197,6 +215,19 @@ public class KGLModelData {
 	    isMakeTexPool = true ;
 	}
     }
+    
+    protected KGLModelData(KGLTextures in_texPool, String modelPath, float scale)
+
+//  protected KGLModelData(GL in_gl,KGLTextures in_texPool,float scale,boolean in_isUseVBO)
+  {
+	texPool = in_texPool ;
+	glObj = null ;
+	if( texPool == null ) {
+	    texPool = new KGLTextures(modelPath) ;
+	    isMakeTexPool = true ;
+	}
+  }
+    
     /**
      * 描画有無を変更する<br>
      * @param objectName	オブジェクト名

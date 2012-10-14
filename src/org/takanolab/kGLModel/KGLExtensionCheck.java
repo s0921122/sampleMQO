@@ -18,7 +18,7 @@
  *	<airmail(at)ebony.plala.or.jp>
  * 
  */
-package jp.nyatla.kGLModel;
+package org.takanolab.kGLModel;
 import javax.microedition.khronos.opengles.*;
 /**
  * OpenGL拡張が実装されているかどうかチェックする<br>

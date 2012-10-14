@@ -7,7 +7,7 @@
  * 
  * KGL用Exceptionクラス
  */
-package jp.nyatla.kGLModel;
+package org.takanolab.kGLModel;
 
 public class KGLException extends Exception
 {

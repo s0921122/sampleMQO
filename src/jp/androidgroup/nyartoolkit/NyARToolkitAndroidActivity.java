@@ -7,9 +7,6 @@ import java.nio.IntBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import org.takanolab.database.DatabaseActional;
-import org.takanolab.database.DatabaseHelper;
-
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndMarkerSystem;
 import jp.androidgroup.nyartoolkit.markersystem.NyARAndSensor;
 import jp.androidgroup.nyartoolkit.sketch.AndSketch;
@@ -19,10 +16,12 @@ import jp.androidgroup.nyartoolkit.utils.gl.AndGLDebugDump;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLFpsLabel;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLTextLabel;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLView;
-import jp.nyatla.kGLModel.KGLException;
-import jp.nyatla.kGLModel.KGLModelData;
 import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
+
+import org.takanolab.kGLModel.KGLException;
+import org.takanolab.kGLModel.KGLModelData;
+
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -60,6 +59,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// マーカーの数
 	private static final int PAT_MAX = 2;
 
+	// 使用するモデルのパス
+	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/";
 	// ユーザが選択したモデル名を受け取る変数
 	private String requestName = "";
 
@@ -212,8 +213,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			}
 			if(model_data[PAT_MAX-1] == null){
 				try {
-					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
-					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+//					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
+//					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+					// 外部ストレージから読み込み
+					model_data[0] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[0], 0.15f);
+					model_data[1] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[1], 0.06f);
 				} catch (KGLException e) {
 					e.printStackTrace();
 					throw new NyARException(e);
