@@ -57,7 +57,7 @@ public class DatabaseActional {
 	public Cursor select(String name, String colum){
 		Log.d(TAG,"Search : " + name);
 		db = helper.getReadableDatabase();
-		Cursor csr = db.rawQuery("select " + colum + " from " + DatabaseHelper.TABLE_NAME + " where model_name = '" + name + "'", null);
+		Cursor csr = db.rawQuery("select " + colum + " from " + DatabaseHelper.MANIPULATION_TABLE + " where model_name = '" + name + "'", null);
 		return csr;
 	}
 	
@@ -95,7 +95,7 @@ public class DatabaseActional {
 		try{
 			val.put("model_name", name);
 			val.put(colum, num);
-			re = db.insert(DatabaseHelper.TABLE_NAME, null,val);
+			re = db.insert(DatabaseHelper.MANIPULATION_TABLE, null,val);
 			db.setTransactionSuccessful();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -124,7 +124,7 @@ public class DatabaseActional {
 		ContentValues val = new ContentValues();
 		try{			
 			val.put(colum, num);
-			re = db.update(DatabaseHelper.TABLE_NAME, val, "model_name = '" + name + "'", null);
+			re = db.update(DatabaseHelper.MANIPULATION_TABLE, val, "model_name = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
 				e.printStackTrace();
@@ -158,7 +158,7 @@ public class DatabaseActional {
 			int newNum = storeInt = untilNow + addNum;
 			
 			val.put(colum, newNum);
-			re = db.update(DatabaseHelper.TABLE_NAME, val, "model_name = '" + name + "'", null);
+			re = db.update(DatabaseHelper.MANIPULATION_TABLE, val, "model_name = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
 				e.printStackTrace();
@@ -211,7 +211,7 @@ public class DatabaseActional {
 		
 		int re=0;
 		try{
-		re =  db.delete(DatabaseHelper.TABLE_NAME, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
+		re =  db.delete(DatabaseHelper.MANIPULATION_TABLE, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
 		db.setTransactionSuccessful();
 		}catch(Exception e){
 			e.printStackTrace();
@@ -222,16 +222,16 @@ public class DatabaseActional {
 	}
 	
 	/**
-	 * テーブルを削除します．<br>
-	 * デバッグ用
+	 * 指定したテーブルを削除します．<br>
 	 * 
-	 * @version 1.0
+	 * @version 1.1
+	 * @param tableName 削除するテーブル名
 	 */
-	public void deleteTable(){
+	public void deleteTable(String tableName){
 		Log.d(TAG,"Delete Table");
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
-		db.execSQL("delete from " + DatabaseHelper.TABLE_NAME);
+		db.execSQL("delete from " + tableName);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -245,7 +245,7 @@ public class DatabaseActional {
 	 */
 	public void timeStamp(String name){
 		StringBuilder str = new StringBuilder();
-		str.append("UPDATE ").append(DatabaseHelper.TABLE_NAME).append(" SET ")
+		str.append("UPDATE ").append(DatabaseHelper.MANIPULATION_TABLE).append(" SET ")
 		.append(DatabaseHelper.COLUM_DATE_HOUR).append(" = datetime('now', 'localtime') WHERE ")
 		.append(DatabaseHelper.COLUM_MODEL_NAME).append(" = '").append(name).append("'");
 		
@@ -264,13 +264,25 @@ public class DatabaseActional {
 	}
 	
 	/**
+	 * テーブルのオートインクリメントをリセットします．
+	 * 
+	 * @version 1.2
+	 * @param tableName リセットしたいテーブル名
+	 */
+	public void resetAutoincrement(String tableName){
+		db.execSQL("update sqlite_sequence set seq = 0 where name='" + tableName + "'");
+	}
+	
+	/**
 	 * テーブル削除して、新しくテーブル作成します．<br>
 	 * ついでにオートインクリメントもリセット．
 	 * 
+	 * @version 1.2
+	 * @param tableName 再生成するテーブル名
 	 */
-	public void reCreateTable(){
-		deleteTable();
+	public void reCreateTable(String tableName){
+		deleteTable(tableName);
 		helper.createTable(db);
-		helper.resetAutoincrement(db);
+		resetAutoincrement(tableName);
 	}
 }

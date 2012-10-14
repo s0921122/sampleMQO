@@ -16,7 +16,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "PERSONAL_DATABASE";
-	public static final String TABLE_NAME = "USER_MANIPULATION";
+	public static final String MANIPULATION_TABLE = "USER_MANIPULATION";
+	public static final String CREATURE_TABLE = "CREATURE";
 	
 	// カラム名フィールド
 	public static final String COLUM_ID = "_id";
@@ -65,17 +66,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //        			+ ")";
         	
         	StringBuilder sr = new StringBuilder()
-        	.append("CREATE TABLE ").append( TABLE_NAME ).append(" ( ")
+        	.append("CREATE TABLE ").append( MANIPULATION_TABLE ).append(" ( ")
         	.append( COLUM_ID ).append(" INTEGER PRIMARY KEY AUTOINCREMENT,")
         	.append( COLUM_MODEL_NAME ).append(" TEXT UNIQUE NOT NULL,")
         	.append( COLUM_MOVE ).append(" INTEGER DEFAULT 0,")
-        	.append( COLUM_ROTATE ).append(" INTEGER,")
-        	.append( COLUM_SCALE ).append(" INTEGER,")
-        	.append( COLUM_CAPTURE ).append(" INTEGER,")
-        	.append( COLUM_MARKER ).append(" INTEGER,")
-        	.append( COLUM_USER_SELECT ).append(" INTEGER,")
-        	.append( COLUM_TIME_FRAME ).append(" INTEGER,")
-        	.append( COLUM_FAVORITE ).append(" INTEGER,")
+        	.append( COLUM_ROTATE ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_SCALE ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_CAPTURE ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_MARKER ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_USER_SELECT ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_TIME_FRAME ).append(" INTEGER DEFAULT 0,")
+        	.append( COLUM_FAVORITE ).append(" INTEGER DEFAULT 0,")
         	.append( COLUM_DATE_HOUR ).append(" DATE")
         	.append(" )");
         	sql = new String(sr);
@@ -85,10 +86,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         	// テーブル作成失敗かすでにあるとき
         	System.out.println(e.toString());
         }
-	}
-	
-	public void resetAutoincrement(SQLiteDatabase database){
-		database.execSQL("update sqlite_sequence set seq = 0 where name='" + TABLE_NAME + "'");
 	}
 
 }

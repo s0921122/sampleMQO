@@ -74,7 +74,7 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		
-		db.execSQL("delete from " + DatabaseHelper.TABLE_NAME);
+		db.execSQL("delete from " + DatabaseHelper.MANIPULATION_TABLE);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -99,7 +99,7 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 		try{
 			val.put("name", name);
 			val.put("weight", 10);
-			db.insert(DatabaseHelper.TABLE_NAME, null,val);
+			db.insert(DatabaseHelper.MANIPULATION_TABLE, null,val);
 			db.setTransactionSuccessful();		
 			setCache(name, 10);
 		}catch (Exception e) {
@@ -137,7 +137,7 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 		val = new ContentValues();
 		try{
 			val.put("weight", weight);
-			db.update(DatabaseHelper.TABLE_NAME, val, "name = '" + name + "'", null);
+			db.update(DatabaseHelper.MANIPULATION_TABLE, val, "name = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			setCache(name, weight);
 			}catch(Exception e){
@@ -155,7 +155,7 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 	 */
 	private void checkExist(String name){
 		db = helper.getReadableDatabase();
-		Cursor csr = db.rawQuery("select weight from " + DatabaseHelper.TABLE_NAME + " where name = '" + name + "'", null);
+		Cursor csr = db.rawQuery("select weight from " + DatabaseHelper.MANIPULATION_TABLE + " where name = '" + name + "'", null);
 		if(csr.moveToFirst()){
 			updateData(name,csr.getInt(0));
 		}else{
@@ -165,7 +165,7 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 
 	private void getPersonalDataAll(){
 		db = helper.getReadableDatabase();
-		Cursor csr = db.rawQuery("select name,weight from " + DatabaseHelper.TABLE_NAME + " order by id", null);
+		Cursor csr = db.rawQuery("select name,weight from " + DatabaseHelper.MANIPULATION_TABLE + " order by id", null);
 		//csr.moveToFirst();
 		console.setText("cache:\n");
 		while(csr.moveToNext()){
