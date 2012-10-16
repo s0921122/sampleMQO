@@ -26,15 +26,22 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Environment;
+import android.text.Layout;
+import android.text.style.BackgroundColorSpan;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -53,6 +60,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	CameraPreview _camera_preview;
 	AndGLView _glv;
 	Camera.Size _cap_size;
+	TextView test;
 	
 	// マーカーの数
 	private static final int PAT_MAX = 2;
@@ -158,8 +166,31 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		fr.addView(this._camera_preview, 0, new LayoutParams(screen_w,screen_h));
 		//GLview
 		this._glv=new AndGLView(this);
-		fr.addView(this._glv, 0,new LayoutParams(screen_w,screen_h));
+		fr.addView(this._glv, 0, new LayoutParams(screen_w,screen_h));
 		long end = System.currentTimeMillis();
+
+		//
+		// 右側にView(ListLayout)を表示します
+		//
+		String[] str = {"本多","笠原","里井"};
+		// ListViewを作成
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, str);
+		ListView lists = new ListView(this);
+		// 背景色を選択
+//		listview.setBackgroundColor(Color.BLACK);
+		lists.setAdapter(adapter);
+		
+		// FrameLayout作成
+		FrameLayout side= new FrameLayout(this);
+		// Viewを追加
+		side.addView(lists, 0 , new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.MATCH_PARENT));
+		// Viewの位置を変更
+		side.setPadding((screen_w - (screen_w / 4)), 0, 0, 0);
+		// Layoutを追加
+		addContentView(side, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.FILL_PARENT));
+		//
+		// ここまで
+		//
 		
 		Log.d(TAG,"onStart Time " + (end - start) + "ms");
 		
