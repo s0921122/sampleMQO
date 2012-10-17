@@ -396,6 +396,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
 		menu.add(Menu.NONE, 5, Menu.NONE, "SlectFixationModel");
 		menu.add(Menu.NONE, 6, Menu.NONE, "Exit");
+		menu.add(Menu.NONE, 7, Menu.NONE, "quest");
 		
 		return true;
 	}
@@ -458,6 +459,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		case 6:
 			finish();
 			break;
+		case 7:
+			Intent it = new Intent();
+			it.setClassName("com.paar.ch9", "com.paar.ch9.MainActivity");
+			startActivity(it);
 		}
 		return false;
 	}
