@@ -52,7 +52,8 @@ public class AugmentedActivity extends SensorsActivity implements OnTouchListene
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.d(TAG,"AugmentedActivity Start.");
+        
         camScreen = new CameraSurface(this);
         setContentView(camScreen);
 
@@ -175,5 +176,13 @@ public class AugmentedActivity extends SensorsActivity implements OnTouchListene
 	
 	protected void markerTouched(Marker marker) {
 		Log.w(TAG,"markerTouched() not implemented.");
+	}
+
+	public synchronized void sleep(long msec)
+	{	
+		try
+		{
+			wait(msec);
+		}catch(InterruptedException e){}
 	}
 }

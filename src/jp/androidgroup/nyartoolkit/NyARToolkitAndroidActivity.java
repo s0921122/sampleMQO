@@ -220,22 +220,22 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			//create marker system
 			this._ms=new NyARAndMarkerSystem(new NyARMarkerSystemConfig(this._cap_size.width,this._cap_size.height));
 			
-			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
+//			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
 			
 			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
 
-			for(String str : modelNames){
-				if(str == null) Log.d(TAG,"modelNames is Null");
-			}
+//			for(String str : modelNames){
+//				if(str == null) Log.d(TAG,"modelNames is Null");
+//			}
 			
 			// モデルの名前
 			modelNames[0] = "Kiageha.mqo";
 			modelNames[1] = "miku01.mqo";
 
-			for(KGLModelData data : model_data){
-				if(data == null) Log.d(TAG,"model_data is Null");
-			}
+//			for(KGLModelData data : model_data){
+//				if(data == null) Log.d(TAG,"model_data is Null");
+//			}
 			if(model_data[PAT_MAX-1] == null){
 				try {
 					//LocalContentProvider content_provider=new LocalContentProvider("Kiageha.mqo");
@@ -338,7 +338,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
 		cgframe[id]++;
-		SdLog.put(id + "フレーム = " + cgframe[id]);
+		//SdLog.put(id + "フレーム = " + cgframe[id]);
 	}
 	
 
@@ -458,11 +458,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			return true;
 		case 6:
 			finish();
-			break;
+			return true;
 		case 7:
 			Intent it = new Intent();
 			it.setClassName("com.paar.ch9", "com.paar.ch9.MainActivity");
 			startActivity(it);
+			return true;
 		}
 		return false;
 	}

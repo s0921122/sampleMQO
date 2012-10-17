@@ -19,6 +19,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
     public CameraSurface(Context context) {
         super(context);
 
+        Log.d(TAG,"CameraSurface Created.");
         try {
             holder = getHolder();
             holder.addCallback(this);
@@ -37,7 +38,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
                 	ex.printStackTrace();
                 }
                 try {
-                    //camera.release();
+//                    camera.release();
                 	CameraHolder.instance().release();
                 } catch (Exception ex) {
                 	ex.printStackTrace();
@@ -45,7 +46,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
                 camera = null;
             }
 
-            //camera = Camera.open();
+//            camera = Camera.open();
             camera = CameraHolder.instance().tryOpen();
             camera.setPreviewDisplay(holder);
         } catch (Exception ex) {
@@ -57,8 +58,8 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
                     	ex.printStackTrace();
                     }
                     try {
-                        //camera.release();
-                        CameraHolder.instance().release();
+                        camera.release();
+                        //CameraHolder.instance().release();
                     } catch (Exception ex2) {
                     	ex.printStackTrace();
                     }
@@ -72,24 +73,24 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceDestroyed(SurfaceHolder holder) {
     	Log.d(TAG,"surfaceDestroy");
-        try {
-            if (camera != null) {
-                try {
-                    camera.stopPreview();
-                } catch (Exception ex) {
-                	ex.printStackTrace();
-                }
-                try {
-                    //camera.release();
-                    CameraHolder.instance().release();
-                } catch (Exception ex) {
-                	ex.printStackTrace();
-                }
-                camera = null;
-            }
-        } catch (Exception ex) {
-        	ex.printStackTrace();
-        }
+    	try {
+    		if (camera != null) {
+    			try {
+    				camera.stopPreview();
+    			} catch (Exception ex) {
+    				ex.printStackTrace();
+    			}
+    			try {
+//    				camera.release();
+    				CameraHolder.instance().release();
+    			} catch (Exception ex) {
+    				ex.printStackTrace();
+    			}
+    			camera = null;
+    		}
+    	} catch (Exception ex) {
+    		ex.printStackTrace();
+    	}
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {

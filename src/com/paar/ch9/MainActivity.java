@@ -38,6 +38,7 @@ public class MainActivity extends AugmentedActivity {
 	private MyDbAdapter mDbHelper;
 	@Override
     public void onCreate(Bundle savedInstanceState) {
+		//sleep(4000);
         super.onCreate(savedInstanceState);
         
         LocalDataSource localData = new LocalDataSource(this.getResources());
@@ -193,4 +194,13 @@ public class MainActivity extends AugmentedActivity {
     	ARData.addMarkers(markers);
     	return true;
     }
+    
+    public synchronized void sleep(long msec)
+    {	
+    	try
+    	{
+    		wait(msec);
+    	}catch(InterruptedException e){}
+    }
+    
 }
