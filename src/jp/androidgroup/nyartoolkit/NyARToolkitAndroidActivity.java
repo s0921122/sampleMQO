@@ -16,8 +16,8 @@ import jp.androidgroup.nyartoolkit.utils.gl.AndGLDebugDump;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLFpsLabel;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLTextLabel;
 import jp.androidgroup.nyartoolkit.utils.gl.AndGLView;
-import jp.nyatla.kGLModel.KGLException;
-import jp.nyatla.kGLModel.KGLModelData;
+import org.takanolab.kGLModel.KGLException;
+import org.takanolab.kGLModel.KGLModelData;
 import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
 import android.content.Intent;
@@ -26,14 +26,10 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Environment;
-import android.text.Layout;
-import android.text.style.BackgroundColorSpan;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -240,8 +236,14 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				try {
 					//LocalContentProvider content_provider=new LocalContentProvider("Kiageha.mqo");
 					//model_data = KGLModelData.createGLModel(gl,null,content_provider,0.015f, KGLExtensionCheck.IsExtensionSupported(gl,"GL_ARB_vertex_buffer_object"));
-					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
-					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+//					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
+//					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+					
+					// jp.nyatla.kGKModelからorg.takanolab.kGLModelへ
+					// モデルのパスを引数へ入れるとそこから生成する（はず）
+					String path = "/sdcard/3DModelData/";
+					model_data[0] = KGLModelData.createGLModel(gl, null, path, modelNames[0], 0.15f);
+					model_data[1] = KGLModelData.createGLModel(gl, null, path, modelNames[1], 0.06f);
 				} catch (KGLException e) {
 					e.printStackTrace();
 					throw new NyARException(e);
