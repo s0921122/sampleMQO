@@ -34,17 +34,17 @@ public class CachePrototypeActivity extends Activity implements OnItemClickListe
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main2);
-		
-		console = (TextView)findViewById(R.id.console);
-		history = (TextView)findViewById(R.id.history);
-		history.setText("history:\n");
-		
-		gView = (GridView)findViewById(R.id.gridView1);
-		
-		cacheHelper = new CacheHelper();
-		helper = new DatabaseHelper(this);
-		db = helper.getReadableDatabase();	
+//		setContentView(R.layout.main);
+//		
+//		console = (TextView)findViewById(R.id.console);
+//		history = (TextView)findViewById(R.id.history);
+//		history.setText("history:\n");
+//		
+//		gView = (GridView)findViewById(R.id.gridView1);
+//		
+//		cacheHelper = new CacheHelper();
+//		helper = new DatabaseHelper(this);
+//		db = helper.getReadableDatabase();	
 		
 	}
 	
