@@ -51,18 +51,21 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private static String TAG = "NyARToolkitAndroid";
 	// ActivityResulutの認識コード
 	private static final int FIXATION_MODEL= 1;
+	public static final String RESULT_ITEM_ID = "selectedItemId";
 
 	CameraPreview _camera_preview;
 	AndGLView _glv;
 	Camera.Size _cap_size;
 
 	// マーカーの数
-	private static final int PAT_MAX = 2;
+	private static final int PAT_MAX = 10;
 
 	// 使用するモデルのパス
 	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
 	// ユーザが選択したモデル名を受け取る変数
-	private String requestName = "";
+//	private String requestName = "";
+	// ユーザが選択したモデルidを受け取る変数
+	private int selectModelId = 0;
 
 	// Modelの制御
 	float lastX = 0;
@@ -105,7 +108,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// GLの描写部分のBitmap
 	Bitmap GLBitmap;
 	// 固定表示を行うかのフラグ
-	boolean fixationflag = false;
+	boolean freemodeflag = false;
 
 	// Log用カウント
 	int count_Position = 0;
@@ -195,23 +198,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			//create marker system
 			this._ms=new NyARAndMarkerSystem(new NyARMarkerSystemConfig(this._cap_size.width,this._cap_size.height));
 
-//			if(_mid[PAT_MAX-1] == 0) Log.d(TAG,"_mid is Null");
-
 			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
-
-//			for(String str : modelNames){
-//				if(str == null) Log.d(TAG,"modelNames is Null");
-//			}
 
 			// モデルの名前
 			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
 			modelNames[1] = "miku01.mqo";
 
-//			for(KGLModelData data : model_data){
-//				if(data == null) Log.d(TAG,"model_data is Null");
-//			}
-			
 			if(model_data[PAT_MAX-1] == null){
 //				try {
 //					// アセットから読み込み
@@ -250,16 +243,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			this.finish();
 		}
 	}
-	
-	public boolean setModelData(int num, KGLModelData data){
-		try{
-			model_data[num] = data;
-			return true;
-		}catch(Exception e){
-			e.printStackTrace();
-			return false;
-		}
-	}
 
 	AndGLDebugDump _debug=null;
 
@@ -279,19 +262,21 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				return;
 			}
 			fps.draw(0, 0);
-			synchronized(this._ss){
-				this._ms.update(this._ss);
-				for(int id : _mid){
-					if(this._ms.isExistMarker(id)) drawModelData(gl, id);
+			if(!freemodeflag){
+				synchronized(this._ss){
+					this._ms.update(this._ss);
+					for(int id : _mid){
+						if(this._ms.isExistMarker(id)) drawModelData(gl, id);
+					}
 				}
 			}
 //			if(displayflag){
 //				// フラグがた立っているときモデルを固定表示
 //				drawModelDataFixation(gl, modelNames[1]);
 //			}
-			if(fixationflag){
+			if(freemodeflag){
 				// フラグが立っているときモデルを固定表示
-				drawModelDataFixation(gl, requestName);
+				drawModelDataFixation(gl, selectModelId);
 			}
 			if(screenCapture){
 				// フラグが立ってるときGL描写部分を画像で保存
@@ -305,10 +290,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 
 	private KGLModelData getCreateModel(GL10 gl, int id){
+		TAG = "getCreateModel";
+		Log.d(TAG,"Create Now!");
 		try {
 			return KGLModelData.createGLModel(gl, null, modelPath, modelNames[id], 0.06f);
 		} catch (KGLException e) {
-			// TODO 自動生成された catch ブロック
 			e.printStackTrace();
 			return null;
 		}
@@ -323,7 +309,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 */
 	private void drawModelData(GL10 gl,int id) throws NyARException{
 		if(model_data[id] == null){
+			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
 			model_data[id] = getCreateModel(gl, id);
+//			return;
+		}else{
+//			Log.d(TAG,modelNames[id] + "is Not Null Texture Reload");
+//			model_data[id].reloadTexture(gl);
 		}
 		
 		this.text.draw("found" + this._ms.getConfidence(id),0,16);
@@ -339,10 +330,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].enables(gl, 10.0f);
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
-		if(sdflag){
-			cgframe[id]++;
-			SdLog.put(id + "フレーム = " + cgframe[id]);
-		}
+//		if(sdflag){
+//			cgframe[id]++;
+//			SdLog.put(id + "フレーム = " + cgframe[id]);
+//		}
 	}
 
 
@@ -354,19 +345,17 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @param name
 	 * @throws NyARException
 	 */
-	private void drawModelDataFixation(GL10 gl,String name) throws NyARException{
+	private void drawModelDataFixation(GL10 gl,int id) throws NyARException{
 		TAG = "drawModelDataFixation";
-		int id = -1;
-		// 名前を検索
-		for(int i=0;i<modelNames.length;i++){
-			if(modelNames[i].startsWith(name)){
-				// 一致する添え字をセット
-				id = i;
-				break;
-			}
+		
+		if(model_data[id] == null){
+			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
+			model_data[id] = getCreateModel(gl, id);
+//			return;
+		}else{
+//			Log.d(TAG,modelNames[id] + "is Not Null Texture Reload");
+//			model_data[id].reloadTexture(gl);
 		}
-		if(id<0) return;
-
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(center,0);
 
@@ -406,10 +395,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		if(displayflag){
-			menu.findItem(3).setTitle("HideClear");
+		if(freemodeflag){
+			menu.findItem(5).setTitle("Clear");
 		}else{
-			menu.findItem(3).setTitle("ShowModel");
+			menu.findItem(5).setTitle("SlectFixationModel");
 		}
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -449,15 +438,15 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			if(sdflag) SdLog.put("ScreenCapture = " + count_ScreenCapture);
 			return true;
 		case 5:
-			if(fixationflag){
-				fixationflag = false;
-				selectFixationModel();
+			if(freemodeflag){
+				freemodeflag = false;
 			}else{
 				selectFixationModel();
 			}
 			return true;
 		case 6:
-			finish();
+//			finish();
+			System.exit(0);
 			break;
 		}
 		return false;
@@ -532,10 +521,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		if(requestCode == FIXATION_MODEL){
 			if(resultCode == RESULT_OK){
 				// 固定表示フラグを立てる
-				fixationflag = true;
+				freemodeflag = true;
 				// 表示するモデル名をセット
-				requestName = data.getStringExtra("selectitem");
-				Log.d(TAG,"getItemName " + data.getStringExtra("selectitem"));
+				selectModelId = data.getIntExtra(RESULT_ITEM_ID, 0);
+				Log.d(TAG,"getItemId " + data.getIntExtra(RESULT_ITEM_ID, 0));
 			}
 		}
 	}

@@ -2,7 +2,7 @@
  * データベースの操作をするクラスを作ってみた
  * 
  * @author s0921122
- * @version 1.2
+ * @version 1.3
  */
 
 package org.takanolab.database;
@@ -13,7 +13,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-public class DatabaseActional {
+public class DatabaseUtil {
 	
 	private static final String TAG = "DatabaseActional";
 	DatabaseHelper helper = null;
@@ -31,7 +31,7 @@ public class DatabaseActional {
 	 * 
 	 * @version 1.0
 	 */
-	public DatabaseActional(){
+	public DatabaseUtil(){
 	}
 	
 	/**
@@ -41,7 +41,7 @@ public class DatabaseActional {
 	 * @version 1.0
 	 * @param con コンテキスト
 	 */
-	public DatabaseActional(Context con){
+	public DatabaseUtil(Context con){
 		helper = new DatabaseHelper(con);
 	}
 	
@@ -75,6 +75,33 @@ public class DatabaseActional {
 		return num;
 	}
 	
+	/**
+	 * 
+	 * データベースから id, model_name, date_hour を除くカラムの合計値を返します．
+	 * 
+	 * @version 1.3
+	 * @param name モデル名
+	 * @return 合計値
+	 */
+	public int getTotalScore(String name){
+		int total = 0;
+		Cursor csr = select(name, "*");
+		if(!csr.moveToFirst()){
+			return 0;
+		}
+		String[] colums = csr.getColumnNames();
+		for(String index : colums){
+			if(index.equals(DatabaseHelper.COLUM_ID) || index.equals(DatabaseHelper.COLUM_MODEL_NAME) ||
+					index.equals(DatabaseHelper.COLUM_DATE_HOUR)){
+			// 何もしない
+			}else{
+				// 合計を計算
+				total += csr.getInt(csr.getColumnIndex(index));
+			}
+		}
+		return total;
+	}
+
 	/**
 	 * 
 	 * データベースへ挿入します．
