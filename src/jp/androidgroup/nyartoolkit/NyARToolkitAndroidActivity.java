@@ -205,7 +205,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 //			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 //			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
-			
+
 			for(int i=0;i<10;i++){
 				this._mid[i] = this._ms.addARMarker(assetMng.open("AR/data/patt0" + i + ".pat"),16,25,80);
 			}
@@ -253,6 +253,16 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		} catch (Exception e) {
 			e.printStackTrace();
 			this.finish();
+		}
+	}
+	
+	public boolean setModelData(int num, KGLModelData data){
+		try{
+			model_data[num] = data;
+			return true;
+		}catch(Exception e){
+			e.printStackTrace();
+			return false;
 		}
 	}
 	
@@ -405,7 +415,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 3, Menu.NONE, "ScreenCapture");
 		menu.add(Menu.NONE, 4, Menu.NONE, "SlectFixationModel");
 		menu.add(Menu.NONE, 5, Menu.NONE, "Exit");
-
 		return true;
 	}
 
