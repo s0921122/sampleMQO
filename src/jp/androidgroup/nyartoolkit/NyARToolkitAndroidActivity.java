@@ -58,7 +58,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	Camera.Size _cap_size;
 
 	// マーカーの数
-	private static final int PAT_MAX = 10;
+	private static final int PAT_MAX = 2;
 
 	// 使用するモデルのパス
 	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
@@ -205,24 +205,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
 			modelNames[1] = "miku01.mqo";
 
-			if(model_data[PAT_MAX-1] == null){
-//				try {
-//					// アセットから読み込み
-////					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
-////					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
-//					// 外部ストレージから読み込み
-////					model_data[0] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[0], 0.15f);
-////					model_data[1] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[1], 0.06f);
-//				} catch (KGLException e) {
-//					e.printStackTrace();
-//					throw new NyARException(e);
-//				}
-			}else{
-				// そのままではテクスチャが貼られないのであらためて貼る
-				model_data[0].reloadTexture(gl);
-				model_data[1].reloadTexture(gl);
+			for(int i=0;i<model_data.length;i++){
+				if(!(model_data[i] == null)) model_data[i].reloadTexture(gl);
 			}
-
+			
 			this._ss.start();
 			//setup openGL Camera Frustum
 			gl.glMatrixMode(GL10.GL_PROJECTION);
