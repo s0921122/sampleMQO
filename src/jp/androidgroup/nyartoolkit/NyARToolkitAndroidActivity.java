@@ -58,10 +58,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	Camera.Size _cap_size;
 
 	// マーカーの数
-	private static final int PAT_MAX = 2;
+	private static final int PAT_MAX = 10;
 
 	// 使用するモデルのパス
-	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
+	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/Rocky/";
 	// ユーザが選択したモデル名を受け取る変数
 //	private String requestName = "";
 	// ユーザが選択したモデルidを受け取る変数
@@ -198,15 +198,25 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			//create marker system
 			this._ms=new NyARAndMarkerSystem(new NyARMarkerSystemConfig(this._cap_size.width,this._cap_size.height));
 
-			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
-			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
+//			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
+//			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
+			
+			for(int i=0;i<10;i++){
+				this._mid[i] = this._ms.addARMarker(assetMng.open("AR/data/patt0" + i + ".pat"),16,25,80);
+			}
 
 			// モデルの名前
-			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
-			modelNames[1] = "miku01.mqo";
+//			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
+//			modelNames[1] = "miku01.mqo";
+			
+			setModelName();
 
 			for(int i=0;i<model_data.length;i++){
-				if(!(model_data[i] == null)) model_data[i].reloadTexture(gl);
+				if(model_data[i] == null) {
+				}else{
+					model_data[i].reloadTexture(gl);
+					Log.d(TAG,"reloadTexture : " + modelNames[i]);
+				}
 			}
 			
 			this._ss.start();
@@ -228,6 +238,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			e.printStackTrace();
 			this.finish();
 		}
+	}
+	
+	private void setModelName(){
+		modelNames[0] = "alpine_ibex";
+		modelNames[1] = "Amerikabaison";
+		modelNames[2] = "bighornsheep";
+		modelNames[3] = "Cougar";
+		modelNames[4] = "Coyote";
+		modelNames[5] = "elk";
+		modelNames[6] = "glizzry";
+		modelNames[7] = "Hoary_Marmot";
+		modelNames[8] = "Lynx";
+		modelNames[9] = "Moose";
 	}
 
 	AndGLDebugDump _debug=null;
@@ -279,7 +302,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		TAG = "getCreateModel";
 		Log.d(TAG,"Create Now!");
 		try {
-			return KGLModelData.createGLModel(gl, null, modelPath, modelNames[id], 0.06f);
+			return KGLModelData.createGLModel(gl, null, modelPath, modelNames[id] + ".mqo", 0.02f);
 		} catch (KGLException e) {
 			e.printStackTrace();
 			return null;
@@ -316,10 +339,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].enables(gl, 10.0f);
 		model_data[id].draw(gl);
 		model_data[id].disables(gl);
-//		if(sdflag){
-//			cgframe[id]++;
-//			SdLog.put(id + "フレーム = " + cgframe[id]);
-//		}
 	}
 
 
