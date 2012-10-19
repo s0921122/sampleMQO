@@ -46,39 +46,37 @@ import android.widget.Toast;
  */
 public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.IGLFunctionEvent
 {
-
 	// Log認識用タグ
 	private static String TAG = "NyARToolkitAndroid";
-	// ActivityResulutの認識コード
+	// ActivityResultの認識コード
 	private static final int FIXATION_MODEL= 1;
-	public static final String RESULT_ITEM_ID = "selectedItemId";
+	// Resultキー
+	public static final String RESULT_SELECT_ITEM_ID = "selectedItemId";
 
 	CameraPreview _camera_preview;
 	AndGLView _glv;
 	Camera.Size _cap_size;
+	// GLの描写部分のBitmap
+	Bitmap GLBitmap;
 
-	// マーカーの数
+	// マーカー&モデルの数
 	private static final int PAT_MAX = 10;
-
 	// 使用するモデルのパス
-	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/Rocky/";
-	// ユーザが選択したモデル名を受け取る変数
-//	private String requestName = "";
+	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
 	// ユーザが選択したモデルidを受け取る変数
 	private int selectModelId = 0;
 
+	// 画面サイズ
+	int screen_w,screen_h;
+	
+	// ------------- Model ---------------------------
+	// modelの操作フラグ
+	int manipulationMode = 0;
 	// Modelの制御
 	float lastX = 0;
 	float lastY = 0;
 	float scale = 2f;
 	float xpos=0,ypos=0,zpos=0,xrot=0,yrot=0,zrot=0;
-
-	// modelの操作フラグ
-	int mode = 0;
-	// 画面サイズ
-	int screen_w,screen_h;
-
-
 	// 固定表示をするときに使う姿勢制御の変数
 	float[] center = new float[]{
 			0.99548185f,
@@ -98,27 +96,34 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			-359.72952f,
 			1.0f
 	};
+	// ----------------------------------------------
 
+	
+	// ------------------ Flag --------------------
 	// モデルの固定表示フラグ
 	boolean displayflag = false;
 	// スクリーンキャプチャフラグ
 	boolean screenCapture = false;
 	// Bitmapの存在フラグ
 	boolean isGLBitmap = false;
-	// GLの描写部分のBitmap
-	Bitmap GLBitmap;
 	// 固定表示を行うかのフラグ
 	boolean freemodeflag = false;
-
+	// Log用フラグ
+	boolean sdLogflag = true;
+	// -------------------------------------------
+	
+	
+	// ------------------- Log -------------------
 	// Log用カウント
 	int count_Position = 0;
 	int count_Rotate = 0;
 	int count_Scale = 0;
 	int count_ScreenCapture = 0;
-	private int [] cgframe = new int[PAT_MAX];
-	// Log用フラグ
-	boolean sdflag = false;
+	int uiMode = 0;
+	int markerModelId = 0;
+	//--------------------------------------------
 
+	
 	// for model renderer
 	private static final int CROP_MSG = 1;
 	private static final int FIRST_TIME_INIT = 2;
@@ -219,6 +224,18 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				}
 			}
 			
+			if(sdLogflag){
+				//現在のモード
+				switch(uiMode){
+				case 0: 
+					SdLog.put("Start3DCGMode");
+					break;
+				case 1:
+					SdLog.put("StartFreeMode");
+					break;
+				}
+			}
+			
 			this._ss.start();
 			//setup openGL Camera Frustum
 			gl.glMatrixMode(GL10.GL_PROJECTION);
@@ -234,7 +251,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			Log.d(TAG,"setupGL Time " + (end - start) + "ms");
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			this.finish();
 		}
@@ -244,8 +260,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		modelNames[0] = "alpine_ibex";
 		modelNames[1] = "Amerikabaison";
 		modelNames[2] = "bighornsheep";
-		modelNames[3] = "Cougar";
-		modelNames[4] = "Coyote";
+		modelNames[3] = "cougar";
+		modelNames[4] = "coyote";
 		modelNames[5] = "elk";
 		modelNames[6] = "glizzry";
 		modelNames[7] = "Hoary_Marmot";
@@ -279,10 +295,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					}
 				}
 			}
-//			if(displayflag){
-//				// フラグがた立っているときモデルを固定表示
-//				drawModelDataFixation(gl, modelNames[1]);
-//			}
 			if(freemodeflag){
 				// フラグが立っているときモデルを固定表示
 				drawModelDataFixation(gl, selectModelId);
@@ -390,10 +402,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 0, Menu.NONE, "Position");
 		menu.add(Menu.NONE, 1, Menu.NONE, "Rotate");
 		menu.add(Menu.NONE, 2, Menu.NONE, "Scale");
-		//menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
-		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
-		menu.add(Menu.NONE, 5, Menu.NONE, "SlectFixationModel");
-		menu.add(Menu.NONE, 6, Menu.NONE, "Exit");
+		menu.add(Menu.NONE, 3, Menu.NONE, "ScreenCapture");
+		menu.add(Menu.NONE, 4, Menu.NONE, "SlectFixationModel");
+		menu.add(Menu.NONE, 5, Menu.NONE, "Exit");
 
 		return true;
 	}
@@ -401,9 +412,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		if(freemodeflag){
-			menu.findItem(5).setTitle("Clear");
+			menu.findItem(4).setTitle("Clear");
 		}else{
-			menu.findItem(5).setTitle("SlectFixationModel");
+			menu.findItem(4).setTitle("SlectFixationModel");
 		}
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -414,44 +425,44 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		// addしたときのIDで識別
 		switch (item.getItemId()) {
 		case 0:
-			mode = 0;
+			manipulationMode = 0;
 			count_Position++;
-			if(sdflag) SdLog.put("count_Position = " + count_Position);
+			if(sdLogflag) SdLog.put("Position," + modelNames[markerModelId]);
 			return true;
 
 		case 1:
-			mode = 1;
+			manipulationMode = 1;
 			count_Rotate++;
-			if(sdflag) SdLog.put("count_Rotate = " + count_Rotate);
+			if(sdLogflag) SdLog.put("Rotate," + modelNames[markerModelId]);
 			return true;
 
 		case 2:
-			mode = 2;
+			manipulationMode = 2;
 			count_Scale++;
-			if(sdflag) SdLog.put("count_Scale = " + count_Scale);
+			if(sdLogflag) SdLog.put("Scale," + modelNames[markerModelId]);
 			return true;
-//		case 3:
-//			if(!displayflag){
-//				displayflag = true;
-//			}else{
-//				displayflag = false;
-//			}
-//			return true;
-		case 4:
+			
+		case 3:
 			Shot();
 			count_ScreenCapture++;
-			if(sdflag) SdLog.put("ScreenCapture = " + count_ScreenCapture);
+			if(sdLogflag) SdLog.put("ScreenCapture," + modelNames[markerModelId]);
 			return true;
-		case 5:
+			
+		case 4:
 			if(freemodeflag){
 				freemodeflag = false;
+				// モードが変わった
+				uiMode = 0;
+				if(sdLogflag) SdLog.put("Start3DCGMode");
 			}else{
 				selectFixationModel();
 			}
 			return true;
-		case 6:
-//			finish();
-			System.exit(0);
+			
+		case 5:
+			finish();
+//			System.exit(0);
+			if(sdLogflag) SdLog.put("Finish");
 			break;
 		}
 		return false;
@@ -473,7 +484,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			lastX = event.getX();
 			lastY = event.getY();
 
-			switch(mode){
+			switch(manipulationMode){
 			case 0 :
 				setXpos(-dX/1.0f);
 				setYpos(dY/1.0f);
@@ -527,9 +538,14 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			if(resultCode == RESULT_OK){
 				// 固定表示フラグを立てる
 				freemodeflag = true;
-				// 表示するモデル名をセット
-				selectModelId = data.getIntExtra(RESULT_ITEM_ID, 0);
-				Log.d(TAG,"getItemId " + data.getIntExtra(RESULT_ITEM_ID, 0));
+				// モードが切り替わった
+				uiMode = 1;
+				
+				// 表示するモデルidをセット
+				selectModelId = markerModelId = data.getIntExtra(RESULT_SELECT_ITEM_ID, 0);
+				if(sdLogflag) SdLog.put(modelNames[markerModelId] + ",selectFixationModel");
+				
+				Log.d(TAG,"getItemId " + data.getIntExtra(RESULT_SELECT_ITEM_ID, 0));
 			}
 		}
 	}
