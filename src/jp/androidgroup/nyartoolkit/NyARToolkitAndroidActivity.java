@@ -213,17 +213,17 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 //			}
 			
 			if(model_data[PAT_MAX-1] == null){
-				try {
-					// アセットから読み込み
-//					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
-//					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
-					// 外部ストレージから読み込み
-					model_data[0] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[0], 0.15f);
-					model_data[1] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[1], 0.06f);
-				} catch (KGLException e) {
-					e.printStackTrace();
-					throw new NyARException(e);
-				}
+//				try {
+//					// アセットから読み込み
+////					model_data[0] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[0], 0.15f);
+////					model_data[1] = KGLModelData.createGLModel(gl,null,assetMng, modelNames[1], 0.06f);
+//					// 外部ストレージから読み込み
+////					model_data[0] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[0], 0.15f);
+////					model_data[1] = KGLModelData.createGLModel(gl,null,modelPath, modelNames[1], 0.06f);
+//				} catch (KGLException e) {
+//					e.printStackTrace();
+//					throw new NyARException(e);
+//				}
 			}else{
 				// そのままではテクスチャが貼られないのであらためて貼る
 				model_data[0].reloadTexture(gl);
@@ -248,6 +248,16 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			this.finish();
+		}
+	}
+	
+	public boolean setModelData(int num, KGLModelData data){
+		try{
+			model_data[num] = data;
+			return true;
+		}catch(Exception e){
+			e.printStackTrace();
+			return false;
 		}
 	}
 
@@ -275,10 +285,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					if(this._ms.isExistMarker(id)) drawModelData(gl, id);
 				}
 			}
-			if(displayflag){
-				// フラグがた立っているときモデルを固定表示
-				drawModelDataFixation(gl, modelNames[1]);
-			}
+//			if(displayflag){
+//				// フラグがた立っているときモデルを固定表示
+//				drawModelDataFixation(gl, modelNames[1]);
+//			}
 			if(fixationflag){
 				// フラグが立っているときモデルを固定表示
 				drawModelDataFixation(gl, requestName);
@@ -294,6 +304,16 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	}
 
 
+	private KGLModelData getCreateModel(GL10 gl, int id){
+		try {
+			return KGLModelData.createGLModel(gl, null, modelPath, modelNames[id], 0.06f);
+		} catch (KGLException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	/**
 	 * idに一致するモデルを描写します
 	 * 
@@ -302,6 +322,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @throws NyARException
 	 */
 	private void drawModelData(GL10 gl,int id) throws NyARException{
+		if(model_data[id] == null){
+			model_data[id] = getCreateModel(gl, id);
+		}
+		
 		this.text.draw("found" + this._ms.getConfidence(id),0,16);
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
@@ -372,7 +396,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 0, Menu.NONE, "Position");
 		menu.add(Menu.NONE, 1, Menu.NONE, "Rotate");
 		menu.add(Menu.NONE, 2, Menu.NONE, "Scale");
-		menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
+		//menu.add(Menu.NONE, 3, Menu.NONE, "DisplayModel");
 		menu.add(Menu.NONE, 4, Menu.NONE, "ScreenCapture");
 		menu.add(Menu.NONE, 5, Menu.NONE, "SlectFixationModel");
 		menu.add(Menu.NONE, 6, Menu.NONE, "Exit");
@@ -412,13 +436,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			count_Scale++;
 			if(sdflag) SdLog.put("count_Scale = " + count_Scale);
 			return true;
-		case 3:
-			if(!displayflag){
-				displayflag = true;
-			}else{
-				displayflag = false;
-			}
-			return true;
+//		case 3:
+//			if(!displayflag){
+//				displayflag = true;
+//			}else{
+//				displayflag = false;
+//			}
+//			return true;
 		case 4:
 			Shot();
 			count_ScreenCapture++;
