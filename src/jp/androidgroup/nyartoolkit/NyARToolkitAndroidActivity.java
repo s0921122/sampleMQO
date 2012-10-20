@@ -109,7 +109,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// 固定表示を行うかのフラグ
 	boolean freemodeflag = false;
 	// Log用フラグ
-	boolean sdLogflag = true;
+	boolean sdLogflag = false;
 	// -------------------------------------------
 	
 	
@@ -214,18 +214,21 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 //			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
 //			modelNames[1] = "miku01.mqo";
 			
+			// モデル名をセット
 			setModelName();
 
+			// テクスチャを貼りなおす
 			for(int i=0;i<model_data.length;i++){
 				if(model_data[i] == null) {
+					//
 				}else{
 					model_data[i].reloadTexture(gl);
 					Log.d(TAG,"reloadTexture : " + modelNames[i]);
 				}
 			}
 			
+			// 現在モードを出力
 			if(sdLogflag){
-				//現在のモード
 				switch(uiMode){
 				case 0: 
 					SdLog.put("Start3DCGMode");
@@ -253,16 +256,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		} catch (Exception e) {
 			e.printStackTrace();
 			this.finish();
-		}
-	}
-	
-	public boolean setModelData(int num, KGLModelData data){
-		try{
-			model_data[num] = data;
-			return true;
-		}catch(Exception e){
-			e.printStackTrace();
-			return false;
 		}
 	}
 	
@@ -320,6 +313,14 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	}
 
 
+	/**
+	 * 
+	 * idに対応するモデルを作成して返します．
+	 * 
+	 * @param gl GL
+	 * @param id モデルid
+	 * @return 成功したときは作成したモデル，失敗したときはnull
+	 */
 	private KGLModelData getCreateModel(GL10 gl, int id){
 		TAG = "getCreateModel";
 		Log.d(TAG,"Create Now!");
@@ -339,13 +340,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @throws NyARException
 	 */
 	private void drawModelData(GL10 gl,int id) throws NyARException{
+		
 		if(model_data[id] == null){
+			// 描写するモデルがないときは作成する．
 			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
 			model_data[id] = getCreateModel(gl, id);
-//			return;
-		}else{
-//			Log.d(TAG,modelNames[id] + "is Not Null Texture Reload");
-//			model_data[id].reloadTexture(gl);
 		}
 		
 		this.text.draw("found" + this._ms.getConfidence(id),0,16);
@@ -363,13 +362,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		model_data[id].disables(gl);
 	}
 
-
 	/**
-	 * nameの一致するモデルを描写します<br>
+	 * 
+	 * idの一致するモデルを描写します<br>
 	 * マーカーに左右されず画面上に表示されます．
 	 * 
 	 * @param gl
-	 * @param name
+	 * @param id
 	 * @throws NyARException
 	 */
 	private void drawModelDataFixation(GL10 gl,int id) throws NyARException{
@@ -378,22 +377,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		if(model_data[id] == null){
 			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
 			model_data[id] = getCreateModel(gl, id);
-//			return;
-		}else{
-//			Log.d(TAG,modelNames[id] + "is Not Null Texture Reload");
-//			model_data[id].reloadTexture(gl);
 		}
+		
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(center,0);
 
-		// 固定表示のための姿勢位置を取得するためのLog
-		//		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
-		//		String str = "";
-		//		float[] mat = this._ms.getGlMarkerMatrix(id);
-		//		for(float fl : mat){
-		//			str += fl + "\n";
-		//		}
-		//		Log.d(TAG,"Matrix\n" + str + "end.");
+//		固定表示のための姿勢位置を取得するためのLog
+//		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
+//		String str = "";
+//		float[] mat = this._ms.getGlMarkerMatrix(id);
+//		for(float fl : mat){
+//			str += fl + "\n";
+//		}
+//		Log.d(TAG,"Matrix\n" + str + "end.");
 
 		gl.glTranslatef(this.xpos, this.ypos, this.zpos);
 		// OpenGL座標系→ARToolkit座標系
@@ -420,6 +416,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		// メニューアイテムの表示名を変更
 		if(freemodeflag){
 			menu.findItem(4).setTitle("Clear");
 		}else{
@@ -430,45 +427,52 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-
-		// addしたときのIDで識別
+		// idでアイテムを判断
 		switch (item.getItemId()) {
 		case 0:
+			// 移動
 			manipulationMode = 0;
 			count_Position++;
 			if(sdLogflag) SdLog.put("Position," + modelNames[markerModelId]);
 			return true;
 
 		case 1:
+			// 回転
 			manipulationMode = 1;
 			count_Rotate++;
 			if(sdLogflag) SdLog.put("Rotate," + modelNames[markerModelId]);
 			return true;
 
 		case 2:
+			// 大きさ
 			manipulationMode = 2;
 			count_Scale++;
 			if(sdLogflag) SdLog.put("Scale," + modelNames[markerModelId]);
 			return true;
 			
 		case 3:
+			// スクリーンショット
 			Shot();
 			count_ScreenCapture++;
 			if(sdLogflag) SdLog.put("ScreenCapture," + modelNames[markerModelId]);
 			return true;
 			
 		case 4:
+			// 固定表示
 			if(freemodeflag){
+				// FreeModeオフ
 				freemodeflag = false;
 				// モードが変わった
 				uiMode = 0;
 				if(sdLogflag) SdLog.put("Start3DCGMode");
 			}else{
+				// FreeModeオン
 				selectFixationModel();
 			}
 			return true;
 			
 		case 5:
+			// 終了
 			finish();
 //			System.exit(0);
 			if(sdLogflag) SdLog.put("Finish");
