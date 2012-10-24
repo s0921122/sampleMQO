@@ -123,16 +123,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	int markerModelId = 0;
 	//--------------------------------------------
 
-	
-	// for model renderer
-	private static final int CROP_MSG = 1;
-	private static final int FIRST_TIME_INIT = 2;
-	private static final int RESTART_PREVIEW = 3;
-	private static final int CLEAR_SCREEN_DELAY = 4;
-	private static final int SET_CAMERA_PARAMETERS_WHEN_IDLE = 5;
-	public static final int SHOW_LOADING = 6;
-	public static final int HIDE_LOADING = 7;
-
 	// YUV420 convert RGB(naitive)
 	static {
 		System.loadLibrary("yuv420sp2rgb");
@@ -206,6 +196,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 //			this._mid[0]=this._ms.addARMarker(assetMng.open("AR/data/hiro.pat"),16,25,80);
 //			this._mid[1]=this._ms.addARMarker(assetMng.open("AR/data/kanji.pat"),16,25,80);
 
+			// パターンをセット
 			for(int i=0;i<10;i++){
 				this._mid[i] = this._ms.addARMarker(assetMng.open("AR/data/patt0" + i + ".pat"),16,25,80);
 			}
@@ -311,7 +302,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			ex=e;
 		}
 	}
-
 
 	/**
 	 * 

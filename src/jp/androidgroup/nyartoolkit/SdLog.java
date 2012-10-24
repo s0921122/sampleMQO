@@ -10,7 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import android.os.Environment;
-import android.util.Log;
 
 public  class SdLog {
 	private final static String LOGDIR = Environment.getExternalStorageDirectory().getPath() + "/SdLog/";
