@@ -19,6 +19,7 @@ import jp.androidgroup.nyartoolkit.utils.gl.AndGLView;
 import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
 
+import org.takanolab.cache.irc.CacheHelperforDatabasae;
 import org.takanolab.kGLModel.KGLException;
 import org.takanolab.kGLModel.KGLModelData;
 
@@ -30,6 +31,7 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.hardware.Camera;
+import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
@@ -62,10 +64,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// マーカー&モデルの数
 	private static final int PAT_MAX = 10;
 	// 使用するモデルのパス
-	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/";
+	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/Rocky/";
 	// ユーザが選択したモデルidを受け取る変数
 	private int selectModelId = 0;
-
+	
 	// 画面サイズ
 	int screen_w,screen_h;
 	
@@ -129,7 +131,15 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	}
 	public static native void decodeYUV420SP(int[] rgb, byte[] yuv420sp, int width, int height, int type);
 	public static native void decodeYUV420SP(byte[] rgb, byte[] yuv420sp, int width, int heught, int type);
-
+	
+	CacheHelperforDatabasae util;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		util = new CacheHelperforDatabasae(this);
+		Log.d(TAG,"util Create");
+	}
 	/**
 	 * onStartでは、Viewのセットアップをしてください。
 	 */
@@ -150,11 +160,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		this._camera_preview=new CameraPreview(this);
 		// カメラの解像度
 		this._cap_size=this._camera_preview.getRecommendPreviewSize(320,240);
-		//		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
-		//		this._cap_size=this._camera_preview.getRecommendPreviewSize(1280,720);
-		// 画面サイズの計算（画面に表示される大きさ）
-		//		int h = this.getWindowManager().getDefaultDisplay().getHeight();
-		//		screen_w=(this._cap_size.width*h/this._cap_size.height);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(640,480);
+//		this._cap_size=this._camera_preview.getRecommendPreviewSize(1280,720);
+//		画面サイズの計算（画面に表示される大きさ）
+//		int h = this.getWindowManager().getDefaultDisplay().getHeight();
+//		screen_w=(this._cap_size.width*h/this._cap_size.height);
 		//		screen_h=h;
 		screen_w = this.getWindowManager().getDefaultDisplay().getWidth();
 		screen_h = this.getWindowManager().getDefaultDisplay().getHeight();
@@ -200,10 +210,6 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			for(int i=0;i<10;i++){
 				this._mid[i] = this._ms.addARMarker(assetMng.open("AR/data/patt0" + i + ".pat"),16,25,80);
 			}
-
-			// モデルの名前
-//			modelNames[0] = "Brilliant_Blue_Discus_Fish.mqo";
-//			modelNames[1] = "miku01.mqo";
 			
 			// モデル名をセット
 			setModelName();
@@ -250,17 +256,27 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		}
 	}
 	
+	@Override
+	protected void onDestory() {
+		super.onDestory();
+		util.close();
+	}
+	
 	private void setModelName(){
 		modelNames[0] = "alpine_ibex";
 		modelNames[1] = "Amerikabaison";
 		modelNames[2] = "bighornsheep";
-		modelNames[3] = "cougar";
-		modelNames[4] = "coyote";
+		modelNames[3] = "Cougar";
+		modelNames[4] = "Coyote";
 		modelNames[5] = "elk";
 		modelNames[6] = "glizzry";
 		modelNames[7] = "Hoary_Marmot";
 		modelNames[8] = "Lynx";
 		modelNames[9] = "Moose";
+//		modelNames[10] = "mountain_goat";
+//		modelNames[11] = "Mountain_tortoise";
+//		modelNames[12] = "northern_rocky_mountains_gray_wolf";
+//		modelNames[13] = "Rattlesnake";
 	}
 
 	AndGLDebugDump _debug=null;
@@ -311,11 +327,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @param id モデルid
 	 * @return 成功したときは作成したモデル，失敗したときはnull
 	 */
-	private KGLModelData getCreateModel(GL10 gl, int id){
+	synchronized private KGLModelData getCreateModel(GL10 gl, int id){
 		TAG = "getCreateModel";
 		Log.d(TAG,"Create Now!");
 		try {
-			return KGLModelData.createGLModel(gl, null, modelPath, modelNames[id] + ".mqo", 0.02f);
+			if(util.isCacheData(modelNames[id])){
+				Log.d(TAG,"Cache Hit!");
+				return util.getCacheData(modelNames[id]);
+			}else{
+				Log.d(TAG,"Cache No Hit!\nCaching...");
+				KGLModelData data = KGLModelData.createGLModel(gl, null, modelPath, modelNames[id] + ".mqo", 0.02f);
+				util.setCacheData(modelNames[id], "none", 100, data);
+				return data;
+			}
 		} catch (KGLException e) {
 			e.printStackTrace();
 			return null;

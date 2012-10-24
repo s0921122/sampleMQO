@@ -20,18 +20,16 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
-public class CacheHelperforDatabasae {
+public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 
 	// ログ出力用
 	private static final String TAG = "CacheHelperForDatabase";
 	// キャッシュファイルの入出力先のパス
 	private static final String PATH =  Environment.getExternalStorageDirectory().getPath() + "/modelcache/";
 	// 保持するキャッシュの数
-	private int CACHE_MAX = 5;
+	private int CACHE_MAX = 2;
 	// ファイルから読み込むマップ
 	private HashMap<String,KGLModelData> cacheTable;
-	// キャッシュの付加データを保存するデータベースの保持と操作を行うクラス
-	private CacheDatabaseUtils util;
 	// キャッシュされるたびに引かれる有効期限
 	private static final int reCastNum = 1;
 
@@ -42,7 +40,7 @@ public class CacheHelperforDatabasae {
 	 * @param con
 	 */
 	public CacheHelperforDatabasae(Context con){
-		util = new CacheDatabaseUtils(con);
+		startup(con);
 		cacheTable = new HashMap<String, KGLModelData>(5);
 		inportCache();
 	}
@@ -61,7 +59,7 @@ public class CacheHelperforDatabasae {
 	 * 
 	 */
 	private void inportCache(){
-		String[] names = util.getCachingDataNameAll();
+		String[] names = getCachingDataNameAll();
 		for(String name : names){
 			cacheTable.put(name, inputModel(name));
 		}
@@ -71,7 +69,7 @@ public class CacheHelperforDatabasae {
 	 * キャッシュのデータをファイルに書き出す．
 	 */
 	private void exportCache(){
-		String[] names = util.getCachingDataNameAll();
+		String[] names = getCachingDataNameAll();
 		for(String name : names){
 			OutputModel(name, cacheTable.get(name));
 		}
@@ -139,56 +137,63 @@ public class CacheHelperforDatabasae {
 	 * @param model
 	 */
 	public void setCacheData(String name, KGLModelData model){
-		String category = "none";
+		String category = "unknown";
 		int limit = 0;
-		util.reCastLimit(reCastNum);
-		util.updateLimitCategory(category, limit/2);
+		reCastLimit(reCastNum);
+		updateLimitCategory(category, limit/2);
 
 		if(cacheTable.size() >= CACHE_MAX){
 			Log.d(TAG,"Remove Low Priority Cache");
 			removeLowLimitCache();
 		}
 
-		util.insertorUpdate(name, category, limit);
+		insertorUpdate(name, category, limit);
 		cacheTable.put(name, model);
 	}
 	
-	public void setCacheData(String name, String category, KGLModelData model){
-		int limit = 0;
-		util.reCastLimit(reCastNum);
-		util.updateLimitCategory(category, limit/2);
-
-		if(cacheTable.size() >= CACHE_MAX){
-			Log.d(TAG,"Remove Low Priority Cache");
-			removeLowLimitCache();
-		}
-
-		util.insertorUpdate(name, category, limit);
-		cacheTable.put(name, model);
-	}
-	
-	public void setCacheData(String name, String category, int limit, KGLModelData model){
-		util.reCastLimit(reCastNum);
-		util.updateLimitCategory(category, limit/2);
-
-		if(cacheTable.size() >= CACHE_MAX){
-			Log.d(TAG,"Remove Low Priority Cache");
-			removeLowLimitCache();
-		}
-
-		util.insertorUpdate(name, category, limit);
-		cacheTable.put(name, model);
-	}
-
 	/**
-	 * limitを指定する．
+	 * 
+	 * キャッシュをセットする．
 	 * 
 	 * @param name
-	 * @param limit
+	 * @param category
+	 * @param model
 	 */
-//	public void addLimit(String name, int limit){
-//		util.update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, limit);
-//	}
+	public void setCacheData(String name, String category, KGLModelData model){
+		int limit = 0;
+		reCastLimit(reCastNum);
+		updateLimitCategory(category, limit/2);
+
+		if(cacheTable.size() >= CACHE_MAX){
+			Log.d(TAG,"Remove Low Priority Cache");
+			removeLowLimitCache();
+		}
+
+		insertorUpdate(name, category, limit);
+		cacheTable.put(name, model);
+	}
+	
+	/**
+	 * 
+	 * キャッシュをセットする．
+	 * 
+	 * @param name
+	 * @param category
+	 * @param limit
+	 * @param model
+	 */
+	public void setCacheData(String name, String category, int limit, KGLModelData model){
+		reCastLimit(reCastNum);
+		updateLimitCategory(category, limit/2);
+
+		if(cacheTable.size() >= CACHE_MAX){
+			Log.d(TAG,"Remove Low Priority Cache");
+			removeLowLimitCache();
+		}
+
+		insertorUpdate(name, category, limit);
+		cacheTable.put(name, model);
+	}
 
 	/**
 	 * キャッシュが存在するか．
@@ -211,7 +216,7 @@ public class CacheHelperforDatabasae {
 	 * @return
 	 */
 	public KGLModelData getCacheData(String name){
-		util.update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, 100);
+		update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, 100);
 		return cacheTable.get(name);
 	}
 
@@ -219,9 +224,9 @@ public class CacheHelperforDatabasae {
 	 * 一番優先度の低いものを削除する
 	 */
 	public void removeLowLimitCache(){
-		String item = util.getLimitLowerItemNameforFirst();
+		String item = getLimitLowerItemNameforFirst();
 		cacheTable.remove(item);
-		util.delete(item);
+		dead(item);
 	}
 
 	/**
@@ -238,8 +243,11 @@ public class CacheHelperforDatabasae {
 	 * ファイルの書き出しとデータベースのクローズ．
 	 * 
 	 */
-	public void close(){
+	@Override
+	public void close() {
+		super.close();
 		exportCache();
-		util.close();
 	}
+
+
 }

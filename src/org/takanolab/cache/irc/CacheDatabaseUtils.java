@@ -1,6 +1,5 @@
 package org.takanolab.cache.irc;
 
-import android.app.SearchableInfo;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -14,15 +13,13 @@ public class CacheDatabaseUtils {
 	SQLiteDatabase db;
 	private int num = 0;
 	
-	private static final boolean Logflag = false;
+	private static final boolean Logflag = true;
 	
-	/**
-	 * コンストラクタ
-	 * 
-	 * @version 1.0
-	 * @param con
-	 */
-	public CacheDatabaseUtils(Context con){
+	public CacheDatabaseUtils(){
+		
+	}
+	
+	public void startup(Context con){
 		database = new CacheDatabase(con);
 		if(!search("select " + CacheDatabase.COLUMN_NUMBER + " from " + CacheDatabase.TABLE_CACHE +
 				" where " + CacheDatabase.COLUMN_NAME + " = '" + NUMBER + "'")
@@ -400,7 +397,8 @@ public class CacheDatabaseUtils {
 	 */
 	public String[] getCachingDataNameAll(){
 		if(Logflag) Log.d(TAG,"CacheingData :");
-		Cursor csr = search("", "", CacheDatabase.COLUMN_NAME);
+		Cursor csr = search("select " + CacheDatabase.COLUMN_NAME + " from " + CacheDatabase.TABLE_CACHE
+				+ " where " + CacheDatabase.COLUMN_ALIVE + " = 1");
 		String[] names = new String[csr.getCount()];
 		int i = 0;
 		while(csr.moveToNext()){
@@ -453,7 +451,6 @@ public class CacheDatabaseUtils {
 	 * 終了処理
 	 */
 	public void close(){
-		Log.d(TAG,"colsenum = " + num);
 		update(CacheDatabase.COLUMN_NAME, NUMBER, CacheDatabase.COLUMN_NUMBER, num);
 		db.close();
 		database.close();
