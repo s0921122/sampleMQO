@@ -14,7 +14,7 @@ public class CacheDatabaseUtils {
 	SQLiteDatabase db;
 	private int num = 0;
 	
-	private static final boolean Logflag = true;
+	private static final boolean Logflag = false;
 	
 	/**
 	 * コンストラクタ
@@ -39,6 +39,13 @@ public class CacheDatabaseUtils {
 		}
 	}
 	
+	/**
+	 * 
+	 * 順番を覚える行を作成する．
+	 * 
+	 * @param num
+	 * @return
+	 */
 	private Boolean setNumbers(int num){
 		db = database.getWritableDatabase();
 		db.beginTransaction();
@@ -111,6 +118,13 @@ public class CacheDatabaseUtils {
 		return csr;
 	}
 	
+	/**
+	 * 
+	 * データベースから検索を行う．
+	 * 
+	 * @param query クエリ
+	 * @return
+	 */
 	private Cursor search(String query){
 		db = database.getReadableDatabase();
 		return db.rawQuery(query, null);
