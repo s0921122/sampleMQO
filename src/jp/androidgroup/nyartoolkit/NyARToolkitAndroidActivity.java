@@ -255,13 +255,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			this.finish();
 		}
 	}
-	
-	@Override
-	protected void onDestory() {
-		super.onDestory();
-		util.close();
-	}
-	
+
 	private void setModelName(){
 		modelNames[0] = "alpine_ibex";
 		modelNames[1] = "Amerikabaison";
@@ -487,7 +481,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			
 		case 5:
 			// 終了
-			finish();
+			util.close();
+//			finish();
 //			System.exit(0);
 			if(sdLogflag) SdLog.put("Finish");
 			break;

@@ -59,6 +59,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * 
 	 */
 	private void inportCache(){
+		Log.d(TAG,"Cache Importing.");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
 			cacheTable.put(name, inputModel(name));
@@ -69,6 +70,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * キャッシュのデータをファイルに書き出す．
 	 */
 	private void exportCache(){
+		Log.d(TAG,"Cache Exporting");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
 			OutputModel(name, cacheTable.get(name));
@@ -86,6 +88,9 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	private boolean OutputModel(String name, KGLModelData modelData){
 		try{
 			File file = new File(PATH + name + ".obj");
+			if(!file.exists()){
+				new File(PATH).mkdirs();
+			}
 			// FileOutputStreamオブジェクトの生成
 			FileOutputStream outFile = new FileOutputStream(file);
 			// ObjectOutputStreamオブジェクトの生成
@@ -245,6 +250,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	@Override
 	public void close() {
+		Log.d(TAG,"close処理");
 		super.close();
 		exportCache();
 	}

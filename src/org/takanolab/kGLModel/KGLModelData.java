@@ -24,11 +24,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.res.AssetManager;
+import android.widget.AbsListView.SelectionBoundsAdjuster;
 
 /**
  * JOGLを使用してファイルからモデルデータの読み込みと描画を行う<br>
@@ -37,8 +39,12 @@ import android.content.res.AssetManager;
  * 
  * @author kei
  */
-public class KGLModelData {
+public class KGLModelData implements Serializable{
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	/**
      * テクスチャ管理クラス
      */
     protected KGLTextures texPool  = null ;
@@ -56,7 +62,7 @@ public class KGLModelData {
      * @author kkoni
      *
      */
-    protected class GLMaterial {
+    protected class GLMaterial implements Serializable{
 	/**
 	 * マテリアル名
 	 */
@@ -125,7 +131,7 @@ public class KGLModelData {
      * @author kei
      *
      */
-    protected class GLObject {
+    protected class GLObject implements Serializable{
 	/**
 	 * オブジェクト名<br>
 	 */

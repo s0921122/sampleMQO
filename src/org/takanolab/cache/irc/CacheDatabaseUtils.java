@@ -451,8 +451,18 @@ public class CacheDatabaseUtils {
 	 * 終了処理
 	 */
 	public void close(){
+		Log.d(TAG,"close処理");
 		update(CacheDatabase.COLUMN_NAME, NUMBER, CacheDatabase.COLUMN_NUMBER, num);
+		sleep(1000);
 		db.close();
 		database.close();
+	}
+	
+	public synchronized void sleep(long msec)
+	{	//指定ミリ秒実行を止めるメソッド
+		try
+		{
+			wait(msec);
+		}catch(InterruptedException e){}
 	}
 }
