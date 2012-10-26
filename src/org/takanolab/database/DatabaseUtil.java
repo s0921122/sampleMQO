@@ -2,10 +2,12 @@
  * データベースの操作をするクラスを作ってみた
  * 
  * @author s0921122
- * @version 1.3
+ * @version 1.4
  */
 
 package org.takanolab.database;
+
+import org.takanolab.cache.irc.CacheDatabase;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -18,6 +20,7 @@ public class DatabaseUtil {
 	private static final String TAG = "DatabaseActional";
 	DatabaseHelper helper = null;
 	SQLiteDatabase db = null;
+	private static final Boolean Logflag = true;
 	
 	// 前回更新のモデル名を保持
 	String storeName = "";
@@ -35,44 +38,79 @@ public class DatabaseUtil {
 	}
 	
 	/**
-	 * コンテキストを受け取りHelperを作成保持します．<br>
-	 * 通常はこれを使ってください．
+	 * コンテキストを受け取りHelperを作成します．
 	 * 
 	 * @version 1.0
 	 * @param con コンテキスト
 	 */
 	public DatabaseUtil(Context con){
+		startUp(con);
+	}
+
+	/**
+	 * 初期化
+	 * @version 1.4
+	 * @param con
+	 */
+	protected void startUp(Context con){
+		if(Logflag) Log.d(TAG,"DatabaseUtil Create!");
 		helper = new DatabaseHelper(con);
+	}
+
+
+	/**
+	 * 
+	 * データベースより検索を行います．
+	 * @version 1.4
+	 * @param searchColum 検索するカラム名
+	 * @param searchValue 検索する値
+	 * @param getColum 取得するカラム名
+	 * @return 
+	 */
+	private Cursor search(String searchColum, String searchValue, String... getColum){
+		if(Logflag) Log.d(TAG,"search : " + searchValue);
+		db = helper.getReadableDatabase();
+		
+		String colums = "";
+		for(String str : getColum){
+			colums += str + ",";
+		}
+		String colum = colums.substring(0,colums.length()-1);
+		
+		Cursor csr = db.rawQuery("select " + colum + " from " + DatabaseHelper.TABLE_MANIPULATION 
+				+ " where " + searchColum + " = '" + searchValue + "'", null);
+		return csr;
 	}
 	
 	/**
 	 * 
 	 * データベースより検索を行います．
 	 * 
-	 * @version 1.0
-	 * @param name 検索するモデルの名前
-	 * @param colum 取得するカラム名
+	 * @version 1.4
+	 * @param query SQL文
 	 * @return 結果のカーソル
 	 */
-	public Cursor select(String name, String colum){
-		Log.d(TAG,"Search : " + name);
+	private Cursor search(String query){
+		if(Logflag) Log.d(TAG,"search : " + query);
 		db = helper.getReadableDatabase();
-		Cursor csr = db.rawQuery("select " + colum + " from " + DatabaseHelper.MANIPULATION_TABLE + " where model_name = '" + name + "'", null);
+		Cursor csr = db.rawQuery(query, null);
 		return csr;
 	}
 	
 	/**
-	 * カーソルから内容を取得します．（int専用）
 	 * 
-	 * @version 1.2
-	 * @param csr 検索結果のカーソル
-	 * @return カラムの内容(int)
+	 * 指定したカラムのスコアを取得します．
+	 * 
+	 * @version 1.4
+	 * @param name モデル名
+	 * @param colum 取得するカラム
+	 * @return スコア
 	 */
-	public int getNum(Cursor csr){
-		csr.moveToFirst();
-		int num = csr.getInt(0);
+	public int getScore(String name, String colum){
+		Cursor csr = search(DatabaseHelper.COLUM_MODEL_NAME, name, colum);
+		int score = csr.getInt(0);
 		csr.close();
-		return num;
+		return score;
 	}
 	
 	/**
@@ -81,11 +119,11 @@ public class DatabaseUtil {
 	 * 
 	 * @version 1.3
 	 * @param name モデル名
-	 * @return 合計値
+	 * @return スコアの合計値
 	 */
 	public int getTotalScore(String name){
 		int total = 0;
-		Cursor csr = select(name, "*");
+		Cursor csr = search(DatabaseHelper.COLUM_MODEL_NAME, name, "*");
 		if(!csr.moveToFirst()){
 			return 0;
 		}
@@ -93,7 +131,7 @@ public class DatabaseUtil {
 		for(String index : colums){
 			if(index.equals(DatabaseHelper.COLUM_ID) || index.equals(DatabaseHelper.COLUM_MODEL_NAME) ||
 					index.equals(DatabaseHelper.COLUM_DATE_HOUR)){
-			// 何もしない
+				// 何もしない
 			}else{
 				// 合計を計算
 				total += csr.getInt(csr.getColumnIndex(index));
@@ -112,17 +150,17 @@ public class DatabaseUtil {
 	 * @param num 数値
 	 * @return 成功ならばLowid,失敗なら-1
 	 */
-	public long insert(String name, String colum, int num){
-		Log.d(TAG,"insertData : " + name);
+	private long insert(String name, String colum, int num){
+		if(Logflag) Log.d(TAG,"insertData : " + name);
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		
 		long re = 0;
 		ContentValues val = new ContentValues();
 		try{
-			val.put("model_name", name);
+			val.put(DatabaseHelper.COLUM_MODEL_NAME, name);
 			val.put(colum, num);
-			re = db.insert(DatabaseHelper.MANIPULATION_TABLE, null,val);
+			re = db.insert(DatabaseHelper.TABLE_MANIPULATION, null,val);
 			db.setTransactionSuccessful();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -142,8 +180,8 @@ public class DatabaseUtil {
 	 * @param num 更新する数値
 	 * @return 適用レコード数
 	 */
-	public int update(String name, String colum, int num){
-		Log.d(TAG,"updateData : " + name);
+	private int update(String name, String colum, int num){
+		if(Logflag) Log.d(TAG,"updateData : " + name);
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		
@@ -151,7 +189,7 @@ public class DatabaseUtil {
 		ContentValues val = new ContentValues();
 		try{			
 			val.put(colum, num);
-			re = db.update(DatabaseHelper.MANIPULATION_TABLE, val, "model_name = '" + name + "'", null);
+			re = db.update(DatabaseHelper.TABLE_MANIPULATION, val, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
 				e.printStackTrace();
@@ -171,8 +209,8 @@ public class DatabaseUtil {
 	 * @param addNum 新しく足す数値
 	 * @return 適用レコード数
 	 */
-	public int update(String name, String colum, int untilNow, int addNum){
-		Log.d(TAG,"updateData : " + name);
+	private int update(String name, String colum, int untilNow, int addNum){
+		if(Logflag) Log.d(TAG,"updateData : " + name);
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		
@@ -185,7 +223,7 @@ public class DatabaseUtil {
 			int newNum = storeInt = untilNow + addNum;
 			
 			val.put(colum, newNum);
-			re = db.update(DatabaseHelper.MANIPULATION_TABLE, val, "model_name = '" + name + "'", null);
+			re = db.update(DatabaseHelper.TABLE_MANIPULATION, val, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
 			db.setTransactionSuccessful();
 			}catch(Exception e){
 				e.printStackTrace();
@@ -205,14 +243,14 @@ public class DatabaseUtil {
 	 * @param num 数値
 	 */
 	public void weighUpInsert(String name, String colum, int num){
-		Log.d(TAG,"Weigh up : " + name);
+		if(Logflag) Log.d(TAG,"Weigh up : " + name);
 		// 前回と同じモデル名とカラムなら検索を行わずに更新
 		if(storeName == name && storeColum == colum){
 			update(name, colum, storeInt, num);
 			setTimeStamp(name);
 		}else{
 			// 検索してヒットするかしないかで処理を分ける
-			Cursor csr = select(name, colum);
+			Cursor csr = search(DatabaseHelper.COLUM_MODEL_NAME, name, DatabaseHelper.COLUM_ID);
 			if(csr.moveToFirst()){
 				int untilNow = csr.getInt(0);
 				update(name, colum, untilNow, num);
@@ -234,13 +272,13 @@ public class DatabaseUtil {
 	 * @return 適用レコード数
 	 */
 	public int delete(String name){
-		Log.d(TAG,"delete : " + name);
+		if(Logflag) Log.d(TAG,"delete : " + name);
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		
 		int re=0;
 		try{
-			re =  db.delete(DatabaseHelper.MANIPULATION_TABLE, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
+			re =  db.delete(DatabaseHelper.TABLE_MANIPULATION, DatabaseHelper.COLUM_MODEL_NAME + " = '" + name + "'", null);
 		db.setTransactionSuccessful();
 		}catch(Exception e){
 			e.printStackTrace();
@@ -256,8 +294,8 @@ public class DatabaseUtil {
 	 * @version 1.1
 	 * @param tableName 削除するテーブル名
 	 */
-	public void deleteTable(String tableName){
-		Log.d(TAG,"Delete Table");
+	private void deleteTable(String tableName){
+		if(Logflag) Log.d(TAG,"Delete Table");
 		db = helper.getWritableDatabase();
 		db.beginTransaction();
 		db.execSQL("delete from " + tableName);
@@ -274,7 +312,7 @@ public class DatabaseUtil {
 	 */
 	private void setTimeStamp(String name){
 		StringBuilder str = new StringBuilder();
-		str.append("UPDATE ").append(DatabaseHelper.MANIPULATION_TABLE).append(" SET ")
+		str.append("UPDATE ").append(DatabaseHelper.TABLE_MANIPULATION).append(" SET ")
 		.append(DatabaseHelper.COLUM_DATE_HOUR).append(" = datetime('now', 'localtime') WHERE ")
 		.append(DatabaseHelper.COLUM_MODEL_NAME).append(" = '").append(name).append("'");
 		
@@ -293,16 +331,6 @@ public class DatabaseUtil {
 	}
 	
 	/**
-	 * テーブルのオートインクリメントをリセットします．
-	 * 
-	 * @version 1.2
-	 * @param tableName リセットしたいテーブル名
-	 */
-	private void resetAutoincrement(String tableName){
-		db.execSQL("update sqlite_sequence set seq = 0 where name='" + tableName + "'");
-	}
-	
-	/**
 	 * テーブル削除して、新しくテーブル作成します．<br>
 	 * ついでにオートインクリメントもリセット．
 	 * 
@@ -314,4 +342,15 @@ public class DatabaseUtil {
 		helper.createTable(db);
 		resetAutoincrement(tableName);
 	}
+	
+	/**
+	 * テーブルのオートインクリメントをリセットします．
+	 * 
+	 * @version 1.2
+	 * @param tableName リセットしたいテーブル名
+	 */
+	private void resetAutoincrement(String tableName){
+		db.execSQL("update sqlite_sequence set seq = 0 where name='" + tableName + "'");
+	}
+	
 }

@@ -14,9 +14,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 
+import org.takanolab.database.DatabaseHelper;
 import org.takanolab.kGLModel.KGLModelData;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Environment;
 import android.util.Log;
 
@@ -41,8 +43,10 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	public CacheHelperforDatabasae(Context con){
 		startup(con);
+		attachDataBase(con,DatabaseHelper.DATABASE_NAME);
+		checkAttach();
 		cacheTable = new HashMap<String, KGLModelData>(5);
-		inportCache();
+		//inportCache();
 	}
 
 	/**
@@ -52,6 +56,20 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	public void setMaxCache(int num){
 		CACHE_MAX = num;
+	}
+
+	private void checkAttach(){
+		Cursor csr;
+		try{
+			csr = search("select * from " + DatabaseHelper.DATABASE_NAME + "." + DatabaseHelper.TABLE_MANIPULATION);
+		}catch (Exception e) {
+			return;
+		}
+		if(csr.moveToFirst()){
+			Log.d(TAG, "attach OK");
+		}else{
+			Log.e(TAG, "attach ERROR");
+		}
 	}
 	
 	/**
@@ -252,7 +270,8 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	public void close() {
 		Log.d(TAG,"close処理");
 		super.close();
-		exportCache();
+		//exportCache();
+		clearCacheTable();
 	}
 
 

@@ -16,8 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private static final int DATABASE_VERSION = 1;
 	public static final String DATABASE_NAME = "PERSONAL_DATABASE";
-	public static final String MANIPULATION_TABLE = "USER_MANIPULATION";
-	public static final String CREATURE_TABLE = "CREATURE";
+	public static final String TABLE_MANIPULATION = "USER_MANIPULATION";
 	
 	// カラム名フィールド
 	public static final String COLUM_ID = "_id";
@@ -66,7 +65,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //        			+ ")";
         	
         	StringBuilder sr = new StringBuilder()
-        	.append("CREATE TABLE ").append( MANIPULATION_TABLE ).append(" ( ")
+        	.append("CREATE TABLE ").append( TABLE_MANIPULATION ).append(" ( ")
         	.append( COLUM_ID ).append(" INTEGER PRIMARY KEY AUTOINCREMENT,")
         	.append( COLUM_MODEL_NAME ).append(" TEXT UNIQUE NOT NULL,")
         	.append( COLUM_MOVE ).append(" INTEGER DEFAULT 0,")

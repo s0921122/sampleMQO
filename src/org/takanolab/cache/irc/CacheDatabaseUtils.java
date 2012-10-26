@@ -1,16 +1,20 @@
 package org.takanolab.cache.irc;
 
+import org.takanolab.database.DatabaseHelper;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceActivity.Header;
+import android.provider.SyncStateContract.Helpers;
 import android.util.Log;
 
 public class CacheDatabaseUtils {
 	private static final String TAG = "CacheDatabaseUtil";
 	private static final String NUMBER = "insertNumber";
-	CacheDatabase database;
-	SQLiteDatabase db;
+	private CacheDatabase database;
+	private SQLiteDatabase db;
 	private int num = 0;
 	
 	private static final boolean Logflag = true;
@@ -34,6 +38,12 @@ public class CacheDatabaseUtils {
 			Log.d(TAG,"db num = " + csr.getInt(0) + "\nnum = " + num);
 			csr.close();
 		}
+	}
+	
+	protected void attachDataBase(Context con, String databaseName){
+		db = database.getWritableDatabase();
+		String personalDatabasePath = con.getDatabasePath(databaseName).getPath();
+		db.execSQL("attach database '" + personalDatabasePath + "' as " + DatabaseHelper.DATABASE_NAME);
 	}
 	
 	/**
@@ -76,7 +86,7 @@ public class CacheDatabaseUtils {
 	 * @param getColum
 	 * @return
 	 */
-	private Cursor search(String searchColum, String searchValue, String... getColum){
+	protected Cursor search(String searchColum, String searchValue, String... getColum){
 		if(Logflag) Log.d(TAG,"search : " + searchValue);
 		db = database.getReadableDatabase();
 		
@@ -100,7 +110,7 @@ public class CacheDatabaseUtils {
 	 * @param getColum
 	 * @return
 	 */
-	private Cursor search(String searchColum, int searchValue, String... getColum){
+	protected Cursor search(String searchColum, int searchValue, String... getColum){
 		if(Logflag) Log.d(TAG,"search : " + searchValue);
 		db = database.getReadableDatabase();
 		
@@ -122,7 +132,7 @@ public class CacheDatabaseUtils {
 	 * @param query クエリ
 	 * @return
 	 */
-	private Cursor search(String query){
+	public Cursor search(String query){
 		db = database.getReadableDatabase();
 		return db.rawQuery(query, null);
 	}

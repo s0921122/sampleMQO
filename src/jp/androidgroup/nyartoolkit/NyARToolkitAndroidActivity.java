@@ -20,6 +20,9 @@ import jp.nyatla.nyartoolkit.core.NyARException;
 import jp.nyatla.nyartoolkit.markersystem.NyARMarkerSystemConfig;
 
 import org.takanolab.cache.irc.CacheHelperforDatabasae;
+import org.takanolab.database.DatabaseHelper;
+import org.takanolab.database.DatabaseScore;
+import org.takanolab.database.DatabaseUtil;
 import org.takanolab.kGLModel.KGLException;
 import org.takanolab.kGLModel.KGLModelData;
 
@@ -34,6 +37,7 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -67,10 +71,10 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	private String modelPath = Environment.getExternalStorageDirectory().getPath() + "/3DModelData/Rocky/";
 	// ユーザが選択したモデルidを受け取る変数
 	private int selectModelId = 0;
-	
+
 	// 画面サイズ
 	int screen_w,screen_h;
-	
+
 	// ------------- Model ---------------------------
 	// modelの操作フラグ
 	int manipulationMode = 0;
@@ -100,7 +104,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	};
 	// ----------------------------------------------
 
-	
+
 	// ------------------ Flag --------------------
 	// モデルの固定表示フラグ
 	boolean displayflag = false;
@@ -113,8 +117,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	// Log用フラグ
 	boolean sdLogflag = false;
 	// -------------------------------------------
-	
-	
+
+
 	// ------------------- Log -------------------
 	// Log用カウント
 	int count_Position = 0;
@@ -122,7 +126,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	int count_Scale = 0;
 	int count_ScreenCapture = 0;
 	int uiMode = 0;
-	int markerModelId = 0;
+	int markerModelId = -1;
 	//--------------------------------------------
 
 	// YUV420 convert RGB(naitive)
@@ -131,15 +135,20 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	}
 	public static native void decodeYUV420SP(int[] rgb, byte[] yuv420sp, int width, int height, int type);
 	public static native void decodeYUV420SP(byte[] rgb, byte[] yuv420sp, int width, int heught, int type);
-	
-	CacheHelperforDatabasae util;
-	
+
+	//--------------- Database ---------------
+	CacheHelperforDatabasae cacheUtil;
+	DatabaseUtil databaseUtil;
+	//-----------------------------------------
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		util = new CacheHelperforDatabasae(this);
-		Log.d(TAG,"util Create");
+		cacheUtil = new CacheHelperforDatabasae(this);
+		databaseUtil = new DatabaseUtil(this);
+		Log.d(TAG,"utils Create!");
 	}
+
 	/**
 	 * onStartでは、Viewのセットアップをしてください。
 	 */
@@ -210,7 +219,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			for(int i=0;i<10;i++){
 				this._mid[i] = this._ms.addARMarker(assetMng.open("AR/data/patt0" + i + ".pat"),16,25,80);
 			}
-			
+
 			// モデル名をセット
 			setModelName();
 
@@ -223,7 +232,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					Log.d(TAG,"reloadTexture : " + modelNames[i]);
 				}
 			}
-			
+
 			// 現在モードを出力
 			if(sdLogflag){
 				switch(uiMode){
@@ -235,7 +244,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 					break;
 				}
 			}
-			
+
 			this._ss.start();
 			//setup openGL Camera Frustum
 			gl.glMatrixMode(GL10.GL_PROJECTION);
@@ -295,7 +304,9 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				synchronized(this._ss){
 					this._ms.update(this._ss);
 					for(int id : _mid){
-						if(this._ms.isExistMarker(id)) drawModelData(gl, id);
+						if(this._ms.isExistMarker(id)){
+							drawModelData(gl, id);
+						}
 					}
 				}
 			}
@@ -325,13 +336,13 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		TAG = "getCreateModel";
 		Log.d(TAG,"Create Now!");
 		try {
-			if(util.isCacheData(modelNames[id])){
+			if(cacheUtil.isCacheData(modelNames[id])){
 				Log.d(TAG,"Cache Hit!");
-				return util.getCacheData(modelNames[id]);
+				return cacheUtil.getCacheData(modelNames[id]);
 			}else{
 				Log.d(TAG,"Cache No Hit!\nCaching...");
 				KGLModelData data = KGLModelData.createGLModel(gl, null, modelPath, modelNames[id] + ".mqo", 0.02f);
-				util.setCacheData(modelNames[id], "none", 100, data);
+				cacheUtil.setCacheData(modelNames[id], "none", 100, data);
 				return data;
 			}
 		} catch (KGLException e) {
@@ -339,7 +350,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			return null;
 		}
 	}
-	
+
 	/**
 	 * idに一致するモデルを描写します
 	 * 
@@ -348,13 +359,18 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 * @throws NyARException
 	 */
 	private void drawModelData(GL10 gl,int id) throws NyARException{
-		
+		if(!(markerModelId == id)){
+			markerModelId = id;
+			Log.d("drowModel", "dorawMode : " + modelNames[id]);
+			databaseUtil.weighUpInsert(modelNames[id], DatabaseHelper.COLUM_MARKER, DatabaseScore.SCORE_MARKER);
+		}
+
 		if(model_data[id] == null){
 			// 描写するモデルがないときは作成する．
 			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
 			model_data[id] = getCreateModel(gl, id);
 		}
-		
+
 		this.text.draw("found" + this._ms.getConfidence(id),0,16);
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(this._ms.getGlMarkerMatrix(id),0);
@@ -381,12 +397,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	 */
 	private void drawModelDataFixation(GL10 gl,int id) throws NyARException{
 		TAG = "drawModelDataFixation";
-		
+
 		if(model_data[id] == null){
 			Log.d(TAG,modelNames[id] + " is NULL Model Create!");
 			model_data[id] = getCreateModel(gl, id);
 		}
-		
+
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadMatrixf(center,0);
 
@@ -441,30 +457,42 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 			// 移動
 			manipulationMode = 0;
 			count_Position++;
-			if(sdLogflag) SdLog.put("Position," + modelNames[markerModelId]);
+			if(markerModelId > 0){
+				if(sdLogflag) SdLog.put("Position," + modelNames[markerModelId]);
+				databaseUtil.weighUpInsert(modelNames[markerModelId], DatabaseHelper.COLUM_MOVE, DatabaseScore.SCORE_MOVE);
+			}
 			return true;
 
 		case 1:
 			// 回転
 			manipulationMode = 1;
 			count_Rotate++;
-			if(sdLogflag) SdLog.put("Rotate," + modelNames[markerModelId]);
+			if(markerModelId > 0){
+				if(sdLogflag) SdLog.put("Rotate," + modelNames[markerModelId]);
+				databaseUtil.weighUpInsert(modelNames[markerModelId], DatabaseHelper.COLUM_ROTATE, DatabaseScore.SCORE_ROTATE);
+			}
 			return true;
 
 		case 2:
 			// 大きさ
 			manipulationMode = 2;
 			count_Scale++;
-			if(sdLogflag) SdLog.put("Scale," + modelNames[markerModelId]);
+			if(markerModelId > 0){
+				if(sdLogflag) SdLog.put("Scale," + modelNames[markerModelId]);
+				databaseUtil.weighUpInsert(modelNames[markerModelId], DatabaseHelper.COLUM_SCALE, DatabaseScore.SCORE_SCALE);
+			}
 			return true;
-			
+
 		case 3:
 			// スクリーンショット
 			Shot();
 			count_ScreenCapture++;
-			if(sdLogflag) SdLog.put("ScreenCapture," + modelNames[markerModelId]);
+			if(markerModelId > 0){
+				if(sdLogflag) SdLog.put("ScreenCapture," + modelNames[markerModelId]);
+				databaseUtil.weighUpInsert(modelNames[markerModelId], DatabaseHelper.COLUM_CAPTURE, DatabaseScore.SCORE_CAPTURE);
+			}
 			return true;
-			
+
 		case 4:
 			// 固定表示
 			if(freemodeflag){
@@ -478,11 +506,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				selectFixationModel();
 			}
 			return true;
-			
+
 		case 5:
 			// 終了
-			util.close();
-//			finish();
+			cacheUtil.close();
+			databaseUtil.close();
+			finish();
 //			System.exit(0);
 			if(sdLogflag) SdLog.put("Finish");
 			break;
@@ -528,6 +557,19 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		}
 		return true;
 	}
+	
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+	    if (event.getAction()==KeyEvent.ACTION_DOWN) {
+	        switch (event.getKeyCode()) {
+	        case KeyEvent.KEYCODE_BACK:
+	            // ダイアログ表示など特定の処理を行いたい場合はここに記述
+	            // 親クラスのdispatchKeyEvent()を呼び出さずにtrueを返す
+	            return true;
+	        }
+	    }
+	    return super.dispatchKeyEvent(event);
+	}
 
 	public void setScale(float f) {
 		this.scale += f;
@@ -562,11 +604,12 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 				freemodeflag = true;
 				// モードが切り替わった
 				uiMode = 1;
-				
+
 				// 表示するモデルidをセット
 				selectModelId = markerModelId = data.getIntExtra(RESULT_SELECT_ITEM_ID, 0);
 				if(sdLogflag) SdLog.put(modelNames[markerModelId] + ",selectFixationModel");
-				
+				databaseUtil.weighUpInsert(modelNames[markerModelId], DatabaseHelper.COLUM_USER_SELECT, DatabaseScore.SCORE_USER_SELECT);
+
 				Log.d(TAG,"getItemId " + data.getIntExtra(RESULT_SELECT_ITEM_ID, 0));
 			}
 		}
