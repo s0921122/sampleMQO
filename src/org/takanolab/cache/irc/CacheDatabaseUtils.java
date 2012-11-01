@@ -6,8 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.preference.PreferenceActivity.Header;
-import android.provider.SyncStateContract.Helpers;
 import android.util.Log;
 
 public class CacheDatabaseUtils {
@@ -35,7 +33,6 @@ public class CacheDatabaseUtils {
 					" where " + CacheDatabase.COLUMN_NAME + " = '" + NUMBER + "'");
 			csr.moveToFirst();
 			num = csr.getInt(0);
-			Log.d(TAG,"db num = " + csr.getInt(0) + "\nnum = " + num);
 			csr.close();
 		}
 	}
@@ -461,7 +458,7 @@ public class CacheDatabaseUtils {
 	 * 終了処理
 	 */
 	public void close(){
-		Log.d(TAG,"close処理");
+		if(Logflag) Log.d(TAG,"close処理");
 		update(CacheDatabase.COLUMN_NAME, NUMBER, CacheDatabase.COLUMN_NUMBER, num);
 		sleep(1000);
 		db.close();

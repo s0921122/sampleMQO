@@ -268,11 +268,9 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	@Override
 	public void close() {
-		Log.d(TAG,"close処理");
 		super.close();
 		//exportCache();
 		clearCacheTable();
 	}
-
 
 }

@@ -435,6 +435,8 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		menu.add(Menu.NONE, 3, Menu.NONE, "ScreenCapture");
 		menu.add(Menu.NONE, 4, Menu.NONE, "SlectFixationModel");
 		menu.add(Menu.NONE, 5, Menu.NONE, "Exit");
+		menu.add(Menu.NONE, 6, Menu.NONE, "DatabaseOutput");
+		menu.add(Menu.NONE, 7, Menu.NONE, "DatabaseImport");	
 		return true;
 	}
 
@@ -515,8 +517,18 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 //			System.exit(0);
 			if(sdLogflag) SdLog.put("Finish");
 			break;
+			
+		case 6:
+			databaseUtil.exportCsv();
+			Toast.makeText(this, "CSVExport", Toast.LENGTH_SHORT).show();
+			return true;
+		case 7:
+			databaseUtil.importCsv();
+			Toast.makeText(this, "CSVImport", Toast.LENGTH_SHORT).show();
 		}
 		return false;
+		
+			
 	}
 
 	@Override
@@ -560,6 +572,7 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 	
 	@Override
 	public boolean dispatchKeyEvent(KeyEvent event) {
+		// バックボタンを無効化
 	    if (event.getAction()==KeyEvent.ACTION_DOWN) {
 	        switch (event.getKeyCode()) {
 	        case KeyEvent.KEYCODE_BACK:

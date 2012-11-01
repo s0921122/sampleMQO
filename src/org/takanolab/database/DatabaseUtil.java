@@ -7,6 +7,8 @@
 
 package org.takanolab.database;
 
+import java.util.ArrayList;
+
 import org.takanolab.cache.irc.CacheDatabase;
 
 import android.content.ContentValues;
@@ -160,6 +162,29 @@ public class DatabaseUtil {
 		try{
 			val.put(DatabaseHelper.COLUM_MODEL_NAME, name);
 			val.put(colum, num);
+			re = db.insert(DatabaseHelper.TABLE_MANIPULATION, null,val);
+			db.setTransactionSuccessful();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			db.endTransaction();
+			val.clear();
+		}
+		return re;
+	}
+	
+	/**
+	 * データベースへ挿入します
+	 * @param val
+	 * @return
+	 */
+	private long insert(ContentValues val){
+		if(Logflag) Log.d(TAG,"insertData" + val.getAsString(DatabaseHelper.COLUM_MODEL_NAME));
+		db = helper.getWritableDatabase();
+		db.beginTransaction();
+
+		long re = 0;
+		try{
 			re = db.insert(DatabaseHelper.TABLE_MANIPULATION, null,val);
 			db.setTransactionSuccessful();
 		}catch (Exception e) {
@@ -352,5 +377,61 @@ public class DatabaseUtil {
 	private void resetAutoincrement(String tableName){
 		db.execSQL("update sqlite_sequence set seq = 0 where name='" + tableName + "'");
 	}
+
+	public void exportCsv(){
+		CsvUtil writer = new CsvUtil(CsvUtil.WRITE_MODE);
+		Cursor csr = search("select * from " + DatabaseHelper.TABLE_MANIPULATION);
+		while(csr.moveToNext()){
+			writer.add(createCsvLine(csr));
+		}
+		writer.close();
+		Log.d("CSV","CSV Export!");
+	}
+	
+	public String createCsvLine(Cursor csr){
+		StringBuilder builder = new StringBuilder();
+		builder.append(csr.getInt(0)).append(",")
+		.append(csr.getString(1)).append(",")
+		.append(csr.getInt(2)).append(",")
+		.append(csr.getInt(3)).append(",")
+		.append(csr.getInt(4)).append(",")
+		.append(csr.getInt(5)).append(",")
+		.append(csr.getInt(6)).append(",")
+		.append(csr.getInt(7)).append(",")
+		.append(csr.getInt(8)).append(",")
+		.append(csr.getInt(9)).append(",")
+		.append(csr.getString(10));
+		return builder.toString();
+	}
+	
+	public void importCsv(){
+		CsvUtil reader = new CsvUtil(CsvUtil.READ_MODE);
+		ArrayList<String> line = reader.importCSV();
+		String[] colums;
+		for(String str : line){
+			Log.d("CSV","Loop:" + str);
+			colums = str.split(",", -1);
+			insert(setValues(colums));	
+		}
+		reader.close();
+		Log.d("CSV","CSV Import!" + line.size());
+	}
+
+	private ContentValues setValues(String[] strs){
+		ContentValues val = new ContentValues();
+		val.put(DatabaseHelper.COLUM_ID, strs[0]);
+		val.put(DatabaseHelper.COLUM_MODEL_NAME, strs[1]);
+		val.put(DatabaseHelper.COLUM_MOVE, strs[2]);
+		val.put(DatabaseHelper.COLUM_ROTATE, strs[3]);
+		val.put(DatabaseHelper.COLUM_SCALE, strs[4]);
+		val.put(DatabaseHelper.COLUM_CAPTURE, strs[5]);
+		val.put(DatabaseHelper.COLUM_MARKER, strs[6]);
+		val.put(DatabaseHelper.COLUM_USER_SELECT, strs[7]);
+		val.put(DatabaseHelper.COLUM_TIME_FRAME, strs[8]);
+		val.put(DatabaseHelper.COLUM_FAVORITE, strs[9]);
+		val.put(DatabaseHelper.COLUM_DATE_HOUR, strs[10]);
+		return val;
+	}
+
 	
 }
