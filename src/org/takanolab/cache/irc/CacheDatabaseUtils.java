@@ -11,8 +11,8 @@ import android.util.Log;
 public class CacheDatabaseUtils {
 	private static final String TAG = "CacheDatabaseUtil";
 	private static final String NUMBER = "insertNumber";
-	private CacheDatabase database;
-	private SQLiteDatabase db;
+	protected CacheDatabase database;
+	protected SQLiteDatabase db;
 	private int num = 0;
 	
 	private static final boolean Logflag = true;
@@ -35,12 +35,6 @@ public class CacheDatabaseUtils {
 			num = csr.getInt(0);
 			csr.close();
 		}
-	}
-	
-	protected void attachDataBase(Context con, String databaseName){
-		db = database.getWritableDatabase();
-		String personalDatabasePath = con.getDatabasePath(databaseName).getPath();
-		db.execSQL("attach database '" + personalDatabasePath + "' as " + DatabaseHelper.DATABASE_NAME);
 	}
 	
 	/**

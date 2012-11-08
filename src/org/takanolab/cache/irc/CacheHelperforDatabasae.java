@@ -7,15 +7,18 @@
 
 package org.takanolab.cache.irc;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 
 import org.takanolab.database.DatabaseHelper;
-import org.takanolab.kGLModel.KGLModelData;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -26,14 +29,14 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 
 	// ログ出力用
 	private static final String TAG = "CacheHelperForDatabase";
-	// キャッシュファイルの入出力先のパス
-	private static final String PATH =  Environment.getExternalStorageDirectory().getPath() + "/modelcache/";
 	// 保持するキャッシュの数
 	private int CACHE_MAX = 2;
 	// ファイルから読み込むマップ
-	private HashMap<String,KGLModelData> cacheTable;
+	private HashMap<String,InputStream> cacheTable;
 	// キャッシュされるたびに引かれる有効期限
 	private static final int reCastNum = 1;
+	// Stream操作
+	private StreamUtil stream;
 
 
 	/**
@@ -45,7 +48,8 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		startup(con);
 		attachDataBase(con,DatabaseHelper.DATABASE_NAME);
 		checkAttach();
-		cacheTable = new HashMap<String, KGLModelData>(5);
+		cacheTable = new HashMap<String, InputStream>(5);
+		stream = new StreamUtil();
 		//inportCache();
 	}
 
@@ -58,6 +62,12 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		CACHE_MAX = num;
 	}
 
+	protected void attachDataBase(Context con, String databaseName){
+		db = database.getWritableDatabase();
+		String personalDatabasePath = con.getDatabasePath(databaseName).getPath();
+		db.execSQL("attach database '" + personalDatabasePath + "' as " + DatabaseHelper.DATABASE_NAME);
+	}
+	
 	private void checkAttach(){
 		Cursor csr;
 		try{
@@ -80,7 +90,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		Log.d(TAG,"Cache Importing.");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			cacheTable.put(name, inputModel(name));
+			cacheTable.put(name, stream.fileInputforInputStream(name));
 		}
 	}
 
@@ -91,66 +101,8 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		Log.d(TAG,"Cache Exporting");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			OutputModel(name, cacheTable.get(name));
+			stream.fileOutputforInputStream(name, cacheTable.get(name));
 		}
-	}
-
-	/**
-	 * 
-	 * オブジェクトをファイルに書き出す．
-	 * 
-	 * @param name
-	 * @param modelData
-	 * @return
-	 */
-	private boolean OutputModel(String name, KGLModelData modelData){
-		try{
-			File file = new File(PATH + name + ".obj");
-			if(!file.exists()){
-				new File(PATH).mkdirs();
-			}
-			// FileOutputStreamオブジェクトの生成
-			FileOutputStream outFile = new FileOutputStream(file);
-			// ObjectOutputStreamオブジェクトの生成
-			ObjectOutputStream outObject = new ObjectOutputStream(outFile);
-			// クラスHelloのオブジェクトの書き込み
-			outObject.writeObject(modelData);
-
-			// ストリームのクローズ
-			outObject.close(); 
-			outFile.close();
-			return true;
-		}catch(Exception e){
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	/**
-	 * 
-	 * オブジェクトをファイルから読み込む
-	 * @param name
-	 * @return
-	 */
-	private KGLModelData inputModel(String name){
-		FileInputStream inFile = null;
-		ObjectInputStream inObject = null;
-		KGLModelData model = null;
-		File file = new File(PATH + name + ".obj");
-		try {
-			inFile = new FileInputStream(file);
-			// ObjectInputStreamオブジェクトの生成
-			inObject = new ObjectInputStream(inFile);
-			// オブジェクトの読み込み
-			model = (KGLModelData)inObject.readObject();
-
-			// ストリームのクローズ
-			inObject.close();  
-			inFile.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return model;
 	}
 
 	/**
@@ -159,7 +111,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * @param name
 	 * @param model
 	 */
-	public void setCacheData(String name, KGLModelData model){
+	public void setCacheData(String name, InputStream model){
 		String category = "unknown";
 		int limit = 0;
 		reCastLimit(reCastNum);
@@ -182,7 +134,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * @param category
 	 * @param model
 	 */
-	public void setCacheData(String name, String category, KGLModelData model){
+	public void setCacheData(String name, String category, InputStream model){
 		int limit = 0;
 		reCastLimit(reCastNum);
 		updateLimitCategory(category, limit/2);
@@ -205,7 +157,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * @param limit
 	 * @param model
 	 */
-	public void setCacheData(String name, String category, int limit, KGLModelData model){
+	public void setCacheData(String name, String category, int limit, InputStream model){
 		reCastLimit(reCastNum);
 		updateLimitCategory(category, limit/2);
 
@@ -233,12 +185,11 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	}
 
 	/**
-	 * モデルを返す．
-	 * 
+	 * キャッシュを返す
 	 * @param name
 	 * @return
 	 */
-	public KGLModelData getCacheData(String name){
+	public InputStream getCacheData(String name){
 		update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, 100);
 		return cacheTable.get(name);
 	}
@@ -271,6 +222,135 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		super.close();
 		//exportCache();
 		clearCacheTable();
+	}
+
+}
+
+class StreamUtil{
+	
+	// タグ出力用
+	private static final String TAG = "StreamUtil";
+	// キャッシュファイルの入出力先のパス
+	private static final String PATH = Environment.getExternalStorageDirectory().getPath() + "/modelcache/";
+	// ログ出力
+	private static final boolean LOGFLAG = true;
+	
+	/**
+	 * InputStreamをファイルに書き出す
+	 * 
+	 * @param name
+	 * @param is
+	 */
+	public void fileOutputforInputStream(String name, InputStream is){
+		if(LOGFLAG) Log.d(TAG,"File Output " + name);
+		bytetoFile(name, converttoBytes(is));
+	}
+	
+	/**
+	 * ファイルからInputStreamを読み込み
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public InputStream fileInputforInputStream(String name){
+		if(LOGFLAG) Log.d(TAG,"File Input " + name);
+		return converttoStream(filetoByte(name));
+	}
+	
+	/**
+     * InputStreamをバイト配列に変換する
+     *
+     * @param is
+     * @return バイト配列
+     */
+    private byte[] converttoBytes(InputStream is) {
+    	long start = System.currentTimeMillis();
+    	if(LOGFLAG) Log.d(TAG,"Start : "+ start);
+    	
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        OutputStream os = new BufferedOutputStream(baos);
+        
+        int c;
+        try {
+            while ((c = is.read()) != -1) {
+                os.write(c);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (os != null) {
+                try {
+                    os.flush();
+                    os.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        long end = System.currentTimeMillis();
+        if(LOGFLAG) Log.d(TAG,"End : "+ end);
+        if(LOGFLAG) Log.d(TAG,"InputStream → byte : " + (end - start));
+        
+        return baos.toByteArray();
+    }
+    
+    /**
+     * Byte配列からInputStreamに変換する
+     * 
+     * @param bytes
+     * @return InputStream
+     */
+    private InputStream converttoStream(byte[] bytes){
+    	long start = System.currentTimeMillis();
+    	if(LOGFLAG) Log.d(TAG,"Start : " + start);
+    	
+    	InputStream bais = new ByteArrayInputStream(bytes);
+    	
+    	long end = System.currentTimeMillis();
+    	if(LOGFLAG) Log.d(TAG,"End : " + end);
+    	if(LOGFLAG) Log.d(TAG,"Byte → InputStream : " + (end - start));
+    	
+    	return bais;
+    }
+    
+    /**
+     * バイト配列をファイルに書き出す
+     * 
+     * @param name
+     * @param data
+     */
+	private void bytetoFile(String name, byte[] data){
+		FileOutputStream fos;
+		File file;
+		try {
+			file = new File(PATH + name);
+			fos = new FileOutputStream(file);
+			fos.write(data);
+			fos.close();
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * ファイルからバイト配列で読み込む
+	 * 
+	 * @param name
+	 * @return
+	 */
+	private byte[] filetoByte(String name){
+		File file = new File(PATH + name);
+		byte[] data = null;
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			fis.read(data);
+			fis.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return data;
 	}
 
 }
