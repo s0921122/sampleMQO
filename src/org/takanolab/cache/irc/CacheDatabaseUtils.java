@@ -1,7 +1,5 @@
 package org.takanolab.cache.irc;
 
-import org.takanolab.database.DatabaseHelper;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,19 +7,28 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 public class CacheDatabaseUtils {
+	// ログ出力用
 	private static final String TAG = "CacheDatabaseUtil";
+	// 挿入履歴記録レコード
 	private static final String NUMBER = "insertNumber";
 	protected CacheDatabase database;
 	protected SQLiteDatabase db;
 	private int num = 0;
-	
+	// ログ出力フラグ
 	private static final boolean Logflag = true;
 	
+	/**
+	 * コンストラクタ
+	 */
 	public CacheDatabaseUtils(){
-		
 	}
 	
-	public void startup(Context con){
+	/**
+	 * 初期設定
+	 * 
+	 * @param con
+	 */
+	protected void startup(Context con){
 		database = new CacheDatabase(con);
 		if(!search("select " + CacheDatabase.COLUMN_NUMBER + " from " + CacheDatabase.TABLE_CACHE +
 				" where " + CacheDatabase.COLUMN_NAME + " = '" + NUMBER + "'")
@@ -38,7 +45,6 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * 順番を覚える行を作成する．
 	 * 
 	 * @param num
@@ -69,7 +75,6 @@ public class CacheDatabaseUtils {
 	}
 
 	/**
-	 * 
 	 * データベースから検索を行う．
 	 * 
 	 * @param searchColum
@@ -93,7 +98,6 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * データベースから検索を行う．
 	 * 
 	 * @param searchColum
@@ -117,19 +121,17 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * データベースから検索を行う．
 	 * 
 	 * @param query クエリ
 	 * @return
 	 */
-	public Cursor search(String query){
+	protected Cursor search(String query){
 		db = database.getReadableDatabase();
 		return db.rawQuery(query, null);
 	}
 	
 	/**
-	 * 
 	 * データの挿入を行う．
 	 * 
 	 * @param name
@@ -163,14 +165,13 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * insertかupdateをしてくれます．
 	 * 
 	 * @param name
 	 * @param category
 	 * @param limit
 	 */
-	public void insertorUpdate(String name, String category, int limit){
+	protected void insertorUpdate(String name, String category, int limit){
 		Cursor csr = search(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_NAME, CacheDatabase.COLUMN_LIMIT);
 		if(csr.moveToFirst()){
 			if(csr.getInt(1) == 0){
@@ -193,7 +194,6 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * アップデートを行う．
 	 * 
 	 * @param searchColum
@@ -221,8 +221,7 @@ public class CacheDatabaseUtils {
 		}
 	}
 	
-	/**
-	 * 
+	/** 
 	 * アップデートを行う．
 	 * 
 	 * @param searchColum
@@ -251,7 +250,6 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * アップデートを行う．
 	 * 
 	 * @param searchColum
@@ -276,7 +274,6 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
 	 * categoryが一致するアイテムのlimitにaddを加算
 	 * 
 	 * @param category
@@ -294,8 +291,8 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * 
-	 * nameの一致するアイテムを削除します．（非推奨）
+	 * nameの一致するアイテムを削除します．（非推奨）<br>
+	 * deadを推奨
 	 * 
 	 * @param name
 	 * @return
@@ -317,7 +314,9 @@ public class CacheDatabaseUtils {
 	}
 	
 	/**
-	 * idの一致するアイテムを削除します．（非推奨）
+	 * idの一致するアイテムを削除します．（非推奨）<br>
+	 * deadを推奨
+	 * 
 	 * @param id
 	 * @return
 	 */
@@ -450,17 +449,23 @@ public class CacheDatabaseUtils {
 
 	/**
 	 * 終了処理
+	 * 
 	 */
 	public void close(){
 		if(Logflag) Log.d(TAG,"close処理");
 		update(CacheDatabase.COLUMN_NAME, NUMBER, CacheDatabase.COLUMN_NUMBER, num);
-		sleep(1000);
+		sleep(500);
 		db.close();
 		database.close();
 	}
 	
+	/**
+	 * 指定ミリ秒実行を止めるメソッド
+	 * 
+	 * @param msec
+	 */
 	public synchronized void sleep(long msec)
-	{	//指定ミリ秒実行を止めるメソッド
+	{	
 		try
 		{
 			wait(msec);

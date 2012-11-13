@@ -1069,6 +1069,65 @@ public class KGLMetaseq extends KGLModelData
 			}
 		}
 	}
+	
+	protected KGLMetaseq(GL10 gl, KGLTextures in_texPool, String modelPath, InputStream is, float scale)
+	{
+		super(in_texPool, modelPath, scale);
+		material mats[] = null;
+		InputStream fis = null;
+		multiInput br = null;
+		String chankName[] = null;
+		GLObject glo = null;
+		ArrayList<GLObject> globjs = new ArrayList<GLObject>();
+		try {
+			//fis = is;
+			br = new multiInput(is);
+			while ((chankName = Chank(br, false)) != null) {
+				if (chankName[0].trim().toUpperCase().equals("MATERIAL")) {
+					try {
+						mats = new material[Integer.parseInt(chankName[1])];
+						for (int m = 0; m < mats.length; m++) {
+							mats[m] = new material();
+							mats[m].set(br.readLine().trim());
+						}
+					} catch (Exception mat_e) {
+						Log.e("KGLMetaseq", "MQOファイル　Materialチャンク読み込み例外発生 "+ mat_e.getMessage());
+						throw new KGLException(mat_e);
+					}
+				}
+				try {
+					if (chankName[0].trim().toUpperCase().equals("OBJECT")) {
+						objects object = new objects();
+						object.set(chankName[1], br, scale);
+
+						// System.out.println(object.toString()) ;
+						if (object.face == null){
+							continue;// 面情報のないオブジェクトは飛ばす
+						}
+						glo = makeObjs(gl, mats, object);
+						if (glo != null){
+							globjs.add(glo);
+						}
+					}
+				}catch (Exception obj_e) {
+					Log.e("KGLMetaseq", "MQOファイル　Object[" + chankName[1]+ "]チャンク読み込み例外発生 " + obj_e.toString());
+					throw new KGLException(obj_e);
+				}
+			}
+			br.close();// 読み込み終了
+			br = null;
+			glObj = globjs.toArray(new GLObject[0]);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	/**
 	 * チャンクサーチ

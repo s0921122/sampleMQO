@@ -2,7 +2,7 @@
  * キャッシュの読み書きをする
  * 
  * @author s0921122
- * @version 2.0
+ * @version 2.1
  */
 
 package org.takanolab.cache.irc;
@@ -18,10 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 
-import org.takanolab.database.DatabaseHelper;
-
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Environment;
 import android.util.Log;
 
@@ -31,12 +28,14 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	private static final String TAG = "CacheHelperForDatabase";
 	// 保持するキャッシュの数
 	private int CACHE_MAX = 2;
+	// キャッシュされるたびに引かれる有効期限
+	private  int reCastNum = 1;
 	// ファイルから読み込むマップ
 	private HashMap<String,InputStream> cacheTable;
-	// キャッシュされるたびに引かれる有効期限
-	private static final int reCastNum = 1;
 	// Stream操作
-	private StreamUtil stream;
+	private StreamUtil streamUtil;
+	// ログ出力
+	private static final boolean LOGFLAG = true;
 
 
 	/**
@@ -46,11 +45,9 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	public CacheHelperforDatabasae(Context con){
 		startup(con);
-		attachDataBase(con,DatabaseHelper.DATABASE_NAME);
-		checkAttach();
 		cacheTable = new HashMap<String, InputStream>(5);
-		stream = new StreamUtil();
-		//inportCache();
+		streamUtil = new StreamUtil();
+		inportCache();
 	}
 
 	/**
@@ -61,25 +58,14 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	public void setMaxCache(int num){
 		CACHE_MAX = num;
 	}
-
-	protected void attachDataBase(Context con, String databaseName){
-		db = database.getWritableDatabase();
-		String personalDatabasePath = con.getDatabasePath(databaseName).getPath();
-		db.execSQL("attach database '" + personalDatabasePath + "' as " + DatabaseHelper.DATABASE_NAME);
-	}
 	
-	private void checkAttach(){
-		Cursor csr;
-		try{
-			csr = search("select * from " + DatabaseHelper.DATABASE_NAME + "." + DatabaseHelper.TABLE_MANIPULATION);
-		}catch (Exception e) {
-			return;
-		}
-		if(csr.moveToFirst()){
-			Log.d(TAG, "attach OK");
-		}else{
-			Log.e(TAG, "attach ERROR");
-		}
+	/**
+	 * 有効期限の減少値を設定する
+	 * 
+	 * @param num
+	 */
+	public void setReCastNum(int num){
+		reCastNum = num;
 	}
 	
 	/**
@@ -87,77 +73,59 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 * 
 	 */
 	private void inportCache(){
-		Log.d(TAG,"Cache Importing.");
+		if(LOGFLAG) Log.d(TAG,"Cache Importing.");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			cacheTable.put(name, stream.fileInputforInputStream(name));
+			cacheTable.put(name, streamUtil.fileInputforInputStream(name));
 		}
 	}
 
 	/**
 	 * キャッシュのデータをファイルに書き出す．
+	 * 
 	 */
 	private void exportCache(){
-		Log.d(TAG,"Cache Exporting");
+		if(LOGFLAG) Log.d(TAG,"Cache Exporting");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			stream.fileOutputforInputStream(name, cacheTable.get(name));
+			streamUtil.fileOutputforInputStream(name, cacheTable.get(name));
 		}
 	}
 
 	/**
-	 * キャッシュをセットする．
+	 * キャッシュのセット及びデータベースの更新をする．
 	 * 
 	 * @param name
-	 * @param model
+	 * @param is
 	 */
-	public void setCacheData(String name, InputStream model){
+	public void setCacheData(String name, InputStream is){
 		String category = "unknown";
 		int limit = 0;
-		reCastLimit(reCastNum);
-		updateLimitCategory(category, limit/2);
-
-		if(cacheTable.size() >= CACHE_MAX){
-			Log.d(TAG,"Remove Low Priority Cache");
-			removeLowLimitCache();
-		}
-
-		insertorUpdate(name, category, limit);
-		cacheTable.put(name, model);
+		setCacheData(name, category, limit, is);
 	}
 	
 	/**
-	 * 
-	 * キャッシュをセットする．
+	 * キャッシュのセット及びデータベースの更新をする．
 	 * 
 	 * @param name
 	 * @param category
-	 * @param model
+	 * @param is
 	 */
-	public void setCacheData(String name, String category, InputStream model){
+	public void setCacheData(String name, String category, InputStream is){
 		int limit = 0;
-		reCastLimit(reCastNum);
-		updateLimitCategory(category, limit/2);
-
-		if(cacheTable.size() >= CACHE_MAX){
-			Log.d(TAG,"Remove Low Priority Cache");
-			removeLowLimitCache();
-		}
-
-		insertorUpdate(name, category, limit);
-		cacheTable.put(name, model);
+		setCacheData(name, category, limit, is);
 	}
 	
 	/**
-	 * 
-	 * キャッシュをセットする．
+	 * キャッシュのセット及びデータベースの更新をする．
 	 * 
 	 * @param name
 	 * @param category
 	 * @param limit
-	 * @param model
+	 * @param is
 	 */
-	public void setCacheData(String name, String category, int limit, InputStream model){
+	public void setCacheData(String name, String category, int limit, InputStream is){
+		if(LOGFLAG) Log.d(TAG,"Cache Set " + name);
 		reCastLimit(reCastNum);
 		updateLimitCategory(category, limit/2);
 
@@ -167,7 +135,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		}
 
 		insertorUpdate(name, category, limit);
-		cacheTable.put(name, model);
+		cacheTable.put(name, is);
 	}
 
 	/**
@@ -186,30 +154,31 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 
 	/**
 	 * キャッシュを返す
+	 * 
 	 * @param name
-	 * @return
+	 * @return is
 	 */
 	public InputStream getCacheData(String name){
-		update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, 100);
+		update(CacheDatabase.COLUMN_NAME, name, CacheDatabase.COLUMN_LIMIT, 50);
 		return cacheTable.get(name);
 	}
 
 	/**
 	 * 一番優先度の低いものを削除する
 	 */
-	public void removeLowLimitCache(){
+	private void removeLowLimitCache(){
 		String item = getLimitLowerItemNameforFirst();
 		cacheTable.remove(item);
 		dead(item);
+		if(LOGFLAG) Log.d(TAG,item + " is Dead");
 	}
 
 	/**
 	 * キャッシュ全体を削除
 	 * 
-	 * @author s0921122
-	 * 
 	 */
-	public void clearCacheTable(){
+	private void clearCacheTable(){
+		if(LOGFLAG) Log.d(TAG,"Table Clear");
 		cacheTable.clear();
 	}
 
@@ -220,7 +189,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	@Override
 	public void close() {
 		super.close();
-		//exportCache();
+		exportCache();
 		clearCacheTable();
 	}
 
@@ -325,6 +294,7 @@ class StreamUtil{
 		File file;
 		try {
 			file = new File(PATH + name);
+			checkFile(file);
 			fos = new FileOutputStream(file);
 			fos.write(data);
 			fos.close();
@@ -342,15 +312,26 @@ class StreamUtil{
 	 */
 	private byte[] filetoByte(String name){
 		File file = new File(PATH + name);
-		byte[] data = null;
+		FileInputStream fis = null;
 		try {
-			FileInputStream fis = new FileInputStream(file);
-			fis.read(data);
-			fis.close();
+			 fis = new FileInputStream(file);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return data;
+		return converttoBytes(fis);
+	}
+	
+	/**
+	 * ファイルチェック
+	 * 
+	 * @param file
+	 * @throws IOException
+	 */
+	private void checkFile(File file) throws IOException{
+		if(!file.exists()){
+			new File(file.getParent()).mkdirs();
+			file.createNewFile();
+		}
 	}
 
 }
