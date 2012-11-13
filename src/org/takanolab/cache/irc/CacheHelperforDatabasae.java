@@ -2,7 +2,7 @@
  * キャッシュの読み書きをする
  * 
  * @author s0921122
- * @version 2.1
+ * @version 3.0
  */
 
 package org.takanolab.cache.irc;
@@ -15,8 +15,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import org.takanolab.kGLModel.GLObject;
 
 import android.content.Context;
 import android.os.Environment;
@@ -31,7 +37,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	// キャッシュされるたびに引かれる有効期限
 	private  int reCastNum = 1;
 	// ファイルから読み込むマップ
-	private HashMap<String,InputStream> cacheTable;
+	private HashMap<String,GLObject> cacheTable;
 	// Stream操作
 	private StreamUtil streamUtil;
 	// ログ出力
@@ -45,7 +51,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 	 */
 	public CacheHelperforDatabasae(Context con){
 		startup(con);
-		cacheTable = new HashMap<String, InputStream>(5);
+		cacheTable = new HashMap<String, GLObject>(CACHE_MAX + 1);
 		streamUtil = new StreamUtil();
 		inportCache();
 	}
@@ -76,10 +82,11 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		if(LOGFLAG) Log.d(TAG,"Cache Importing.");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			cacheTable.put(name, streamUtil.fileInputforInputStream(name));
+			cacheTable.put(name, streamUtil.read_object(name));
 		}
 	}
-
+	
+	
 	/**
 	 * キャッシュのデータをファイルに書き出す．
 	 * 
@@ -88,7 +95,7 @@ public class CacheHelperforDatabasae extends CacheDatabaseUtils{
 		if(LOGFLAG) Log.d(TAG,"Cache Exporting");
 		String[] names = getCachingDataNameAll();
 		for(String name : names){
-			streamUtil.fileOutputforInputStream(name, cacheTable.get(name));
+			streamUtil.write_object(cacheTable.get(name), name);
 		}
 	}
 
@@ -332,6 +339,97 @@ class StreamUtil{
 			new File(file.getParent()).mkdirs();
 			file.createNewFile();
 		}
+	}
+	
+	/**
+	 * ByteBufferをbyte[]に変換する
+	 * 
+	 * @param bb
+	 * @return
+	 */
+	public byte[] buffertobyte(ByteBuffer bb){
+		ArrayList<Byte> byteList = new ArrayList<Byte>();
+		
+		for(int i=0; i<=bb.limit(); i++){
+			byteList.add(bb.get(i));
+		}
+		
+		byte[] array = new byte[byteList.size()];
+		for(int j=0; j<=byteList.size(); j++){
+			array[j] = byteList.get(j).byteValue();
+		}
+		
+		return array;
+	}
+	
+	/**
+	 * byte[]からByteBufferにラップする
+	 * 
+	 * @param bt
+	 * @return
+	 */
+	public ByteBuffer bytetoByteBuffer(byte[] bt){
+		return ByteBuffer.wrap(bt);
+	}
+
+	/**
+	 * オブジェクトをファイルに書き出す
+	 * 
+	 * @version 1.0
+	 * @param obj Object
+	 * @param file FilePath
+	 * @return
+	 */
+	public boolean write_object(GLObject obj,String name){
+		for(int i=0; i<=obj.mat.length; i++){
+			obj.mat[i]._vertexBuffer = buffertobyte(obj.mat[i].vertexBuffer);
+			obj.mat[i]._normalBuffer = buffertobyte(obj.mat[i].normalBuffer);
+			obj.mat[i]._uvBuffer = buffertobyte(obj.mat[i].uvBuffer);
+			obj.mat[i]._colBuffer = buffertobyte(obj.mat[i].colBuffer);
+		}
+		
+		try {
+			FileOutputStream outFile = new FileOutputStream(PATH + name);
+			ObjectOutputStream out = new ObjectOutputStream(outFile);
+			out.writeObject(obj);
+			out.close();
+			outFile.close();
+		} catch(Exception e) {
+			Log.d(TAG,"FileOutput");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * ファイルを読みこみオブジェクトを生成
+	 * 
+	 * @version 1.0
+	 * @param file FilePath
+	 * @return
+	 */
+	public GLObject read_object(String name){
+		GLObject obj = new GLObject();
+		try {
+			FileInputStream inFile = new FileInputStream(PATH + name);
+			ObjectInputStream in = new ObjectInputStream(inFile);
+			obj = (GLObject) in.readObject();
+			in.close();
+			inFile.close();
+		} catch(Exception e) {
+			Log.d(TAG,"FileInput");
+			e.printStackTrace();
+		}
+		
+		for(int i=0; i<=obj.mat.length; i++){
+			obj.mat[i].vertexBuffer = bytetoByteBuffer(obj.mat[i]._vertexBuffer);
+			obj.mat[i].normalBuffer = bytetoByteBuffer(obj.mat[i]._normalBuffer);
+			obj.mat[i].uvBuffer = bytetoByteBuffer(obj.mat[i]._uvBuffer);
+			obj.mat[i].colBuffer = bytetoByteBuffer(obj.mat[i]._colBuffer);
+		}
+		
+		return obj;
 	}
 
 }
