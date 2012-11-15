@@ -61,6 +61,19 @@ public class KGLModelData implements Serializable{
 	 * 描画用内部データ
 	 */
 	protected GLObject[] glObj ;
+	
+	/**
+	 * GLObjectを返す
+	 * 
+	 * @return
+	 */
+	public GLObject[] getGLObject(){
+		return glObj;
+	}
+	
+	static public KGLMetaseq createGLModelforCache(GLObject[] obj){
+		return new KGLMetaseq(obj);
+	}
 	/**
 	 * ファイル名の拡張子を見て読み込みクラスを作成する。<br>
 	 * →MQOファイルしか作ってないけどね！<br>
@@ -156,6 +169,10 @@ public class KGLModelData implements Serializable{
 		}
 	}
 
+
+	public KGLModelData() {
+		// TODO 自動生成されたコンストラクター・スタブ
+	}
 
 	/**
 	 * 描画有無を変更する<br>

@@ -987,6 +987,7 @@ public class KGLMetaseq extends KGLModelData
 						}
 						glo = makeObjs(gl, mats, object);
 						if (glo != null){
+							glo.matByteChange();
 							globjs.add(glo);
 						}
 					}
@@ -1127,6 +1128,11 @@ public class KGLMetaseq extends KGLModelData
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	protected KGLMetaseq(GLObject[] obj){
+		super();
+		glObj = obj;
 	}
 
 	/**
