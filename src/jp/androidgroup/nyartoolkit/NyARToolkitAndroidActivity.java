@@ -337,9 +337,11 @@ public class NyARToolkitAndroidActivity extends AndSketch implements AndGLView.I
 		Log.d(TAG,"Create Now!");
 		try {
 			if(cacheUtil.isCacheData(modelNames[id])){
+				// キャッシュヒット
 				Log.d(TAG,"Cache Hit!");
 				return KGLModelData.createGLModelforCache(cacheUtil.getCacheData(modelNames[id]));
 			}else{
+				// キャッシュにヒットしない
 				Log.d(TAG,"Cache No Hit!\nCaching...");
 				KGLModelData data = KGLModelData.createGLModel(gl, null, modelPath, modelNames[id] + ".mqo", 0.02f);
 				cacheUtil.setCacheData(modelNames[id], data.getGLObject());
